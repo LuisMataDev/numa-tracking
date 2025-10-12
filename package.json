@@ -1,16 +1,8 @@
 {
-  "name": "proyecto",
-  "version": "1.0.0",
-  "main": "mobile.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "socket.io-client": "^4.8.1"
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0",
+    "mongoose": "^8.19.1",
+    "socket.io": "^4.8.1"
   }
 }
