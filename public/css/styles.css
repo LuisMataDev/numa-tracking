@@ -1,0 +1,500 @@
+/* styles.css — Estilo moderno, amigable e intuitivo
+   Adaptado al HTML proporcionado (sidebar, header con KPIs, contenedor principal y mapa Leaflet)
+*/
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --muted: #64748b;
+  --text: #0f1724;
+  --sidebar-bg: linear-gradient(180deg, #0b1228 0%, #0f1b36 100%);
+  --accent: #6c8cff;
+  --accent-2: #f357a1;
+  --glass: rgba(255, 255, 255, 0.06);
+  --shadow: 0 6px 18px rgba(12, 20, 33, 0.08);
+  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --gap: 18px;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --------------------------- Sidebar --------------------------- */
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 76px;
+  /* ancho colapsado */
+  background: var(--sidebar-bg);
+  color: #fff;
+  display: flex;
+  align-items: flex-start;
+  padding: 18px 8px;
+  transition: width .28s cubic-bezier(.2, .9, .3, 1);
+  z-index: 40;
+  overflow: hidden;
+}
+
+#sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+#sidebar li {
+  display: block;
+  margin: 6px 0;
+  padding-bottom: 100px;
+}
+
+#sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .18s, transform .12s;
+  width: 100%;
+}
+
+#sidebar a i {
+  font-size: 18px;
+  width: 22px;
+  text-align: center;
+}
+
+#sidebar a span {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity .18s, transform .18s;
+}
+
+#sidebar a:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
+#sidebar a.active {
+  box-shadow: inset 4px 0 0 0 var(--accent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Expandir al pasar el mouse para mostrar etiquetas */
+#sidebar:hover {
+  width: 220px;
+}
+
+#sidebar:hover a span {
+  opacity: 1;
+  transform: none;
+}
+
+/* Ajuste del contenido principal cuando el sidebar se expande */
+#sidebar+#main-content {
+  margin-left: 76px;
+  transition: margin-left .28s cubic-bezier(.2, .9, .3, 1);
+  width: calc(100% - 76px);
+}
+
+#sidebar:hover+#main-content {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+/* ---------------------- Contenedor principal -------------------- */
+#main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: stretch;
+  padding: 22px 28px;
+  width: 100%;
+  min-height: 100vh;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.2px;
+}
+header img{
+  width: 56px;
+  height: 56px;
+}
+.logo-container{
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background-color: #0b1228;
+  padding: 5px 10px;
+  color: #fff;
+  border-radius: 10px;
+}
+
+.kpi-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.kpi-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.55));
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  min-width: 140px;
+}
+
+.kpi-card i {
+  font-size: 20px;
+  width: 30px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.kpi-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.kpi-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+/* ------------------------ Sección principal (mapa) ------------- */
+section#principal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Contenedor donde Leaflet dibujará el mapa */
+#draw-map {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: var(--shadow);
+  border: 1px solid rgba(15, 23, 36, 0.04);
+  min-height: 62vh;
+  /* altura aproximada para el mapa */
+  overflow: hidden;
+}
+
+/* Asegurar que el contenedor interno de Leaflet ocupe todo */
+#draw-map .leaflet-container,
+#draw-map iframe,
+#draw-map>div {
+  height: 100% !important;
+  width: 100% !important;
+  border-radius: 8px;
+}
+
+#status {
+  text-align: center;
+  margin-top: 8px;
+  color: var(--muted);
+}
+
+/* ----------------------- Estilos adicionales de mapa ----------- */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px;
+}
+
+.leaflet-control-container .leaflet-control-zoom {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+}
+
+/* ------------------------ Paneles y utilidades ----------------- */
+.btn-primary {
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: #fff;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.info-container {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: nowrap;
+}
+
+.info-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.55));
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  min-width: 24%;
+  min-height: 150px;
+}
+
+.info-card i {
+  font-size: 20px;
+  width: 30px;
+  text-align: center;
+  color: var(--accent);
+}
+
+.info-value {
+  display: block;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.info-label {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+
+
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 350px;
+  max-width: 90%;
+  border-left: 5px solid #6c8cff;
+}
+
+.notification-content p {
+  margin: 0 0 15px 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.notification-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.notification-actions button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.notification-actions button:hover {
+  opacity: 0.8;
+}
+
+.btn-accept {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.btn-decline {
+  background-color: #e74c3c;
+  color: white;
+}
+
+/* ------------------------ Responsive --------------------------- */
+@media (max-width: 900px) {
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 76px;
+    /* altura de la barra superior */
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    overflow-x: auto;
+    /* permite desplazar si hay muchos items */
+    white-space: nowrap;
+    z-index: 60;
+    transition: none;
+    /* desactivar transiciones de ancho por hover */
+  }
+
+  /* Lista horizontal */
+  #sidebar ul {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    padding-left: 0;
+  }
+
+  /* Items en línea */
+  #sidebar li {
+    display: inline-block;
+    margin: 0 6px;
+    padding-bottom: 0;
+  }
+
+  /* Enlaces: icono + texto en fila */
+  #sidebar a {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    width: auto;
+    /* no forzar ancho al 100% */
+    transform: none;
+  }
+
+  /* Iconos ligeramente más grandes si quieres */
+  #sidebar a i {
+    font-size: 18px;
+    width: auto;
+    text-align: center;
+  }
+
+  /* Mostrar siempre las etiquetas (si prefieres ocultarlas, pon opacity:0) */
+  #sidebar a span {
+    opacity: 1;
+    transform: none;
+    white-space: nowrap;
+    font-size: 15px;
+    display: inline-block;
+  }
+
+  /* DESHABILITAR la expansión por hover en móvil:
+     anulamos la regla #sidebar:hover { width: 220px } del CSS de escritorio */
+  #sidebar:hover {
+    width: 100%;
+    transition: none;
+  }
+
+  #sidebar:hover a span {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Ajustar el contenido principal: usar margin-top en lugar de margin-left */
+  #sidebar+#main-content {
+    margin-left: 0;
+    margin-top: 76px;
+    /* deja espacio para la barra superior */
+    width: 100%;
+    transition: none;
+  }
+
+  h1 {
+    visibility: hidden;
+    position: absolute;
+  }
+
+  #main-content {
+    padding: 12px;
+    width: 100%;
+  }
+
+  .kpi-container {
+    position: relative;
+    gap: 8px;
+    flex-wrap: nowrap;
+  }
+
+  .kpi-container span {
+    visibility: hidden;
+    position: absolute;
+
+  }
+
+  #draw-map {
+
+    position: absolute;
+    /* se mantiene siempre en pantalla */
+    top: 150px;
+    left: 10px;
+    right: 10px;
+
+  }
+}
+
+/* ------------------------ Focus & accesibilidad ---------------- */
+a:focus,
+button:focus,
+input:focus {
+  outline: 3px solid rgba(108, 140, 255, 0.14);
+  outline-offset: 2px;
+}
+
+/* ------------------------ Pequeños toques visuales ------------- */
+#sidebar a .badge {
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+/* Compatibilidad con la versión de ejemplo: permite usar .route-detail.map si tu JS lo crea */
+.route-detail .map,
+.map {
+  height: 62vh;
+  border-radius: 12px;
+}
+
+/* Fin */

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Sección Vehículos</title>
+    <link rel="stylesheet" href="./css/vehiculos.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/png" sizes="16x16" href="html/img/logo.png">
+</head>
+
+<body>
+    <nav id="sidebar">
+        <ul>
+            <li><a href="index.html"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
+            <li><a href="routes.html"><i class="fa-solid fa-route"></i><span>Rutas</span></a></li>
+            <li><a href="vehiculos.html" class="active"><i class="fa-solid fa-truck"></i><span>Vehículos</span></a></li>
+            <li><a href="choferes.html"><i class="fa-solid fa-user"></i></i><span>Choferes</span></a></li>
+            <li><a href="reportes.html"><i class="fa-solid fa-file-alt"></i><span>Reportes</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="vehiculos-container">
+        <aside class="vehiculos-list">
+            <header>
+                <div class="logo-container">
+                    <div class="logo">
+                        <img src="/html/img/logo.png" alt="NUMA logo">
+                    </div>
+                    <div>
+                        <h1>NUMA Movil</h1>
+                        <p class="muted">ADMINISTRADOR--VEHICULOSS </p>
+                    </div>
+                </div>
+            </header>
+            <div class="list-header">
+                <input id="search-vehicle" type="search" placeholder="Buscar..." aria-label="Buscar vehículo" />
+                <button id="btn-new-vehiculo"><i class="fa-solid fa-plus"></i> Nuevo</button>
+            </div>
+            <ul id="vehiculo-items">
+            </ul>
+        </aside>
+
+        <section class="vehicle-detail" id="vehiculo-detail">
+            <p id="initial-message">Selecciona un vehículo para ver sus detalles.</p>
+        </section>
+    </div>
+
+    <template id="vehicle-form-template">
+        <form id="vehicle-form">
+            <h2 id="form-title">Nuevo Vehículo</h2>
+
+            <label for="vehicle-id">Placa (ID)</label>
+            <input type="text" id="vehicle-id" required />
+
+            <label for="vehicle-alias">Alias</label>
+            <input type="text" id="vehicle-alias" />
+
+            <label for="vehicle-marca">Marca</label>
+            <input type="text" id="vehicle-marca" required />
+
+            <label for="vehicle-modelo">Modelo</label>
+            <input type="text" id="vehicle-modelo" required />
+
+            <label for="vehicle-year">Año</label>
+            <input type="number" id="vehicle-year" min="1900" />
+
+
+            <div class="form-actions">
+                <button type="submit" class="primary-btn">Registrar</button>
+                <button type="button" id="btn-cancel-form" class="secondary-btn">Cancelar</button>
+            </div>
+        </form>
+    </template>
+
+    <script src="./js/vehiculos.js"></script>
+</body>
+
+</html>

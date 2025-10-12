@@ -1,0 +1,13 @@
+# Archivos de dependencias (nunca se suben)
+node_modules/
+
+# Archivo de variables de entorno (¡MUY IMPORTANTE!)
+.env
+
+# Archivos de logs
+npm-debug.log
+*.log
+
+# Archivos del sistema operativo (opcional pero recomendado)
+.DS_Store
+Thumbs.db
