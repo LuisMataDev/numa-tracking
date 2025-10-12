@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>Sección Rutas</title>
+    <link rel="stylesheet" href="./css/routes.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        integrity="sha512-..." crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="icon" type="image/png" sizes="16x16" href="html/img/logo.png">
+</head>
+
+<body>
+    <nav id="sidebar">
+        <ul>
+            <li><a href="index.html"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
+            <li><a href="routes.html" class="active"><i class="fa-solid fa-route"></i><span>Rutas</span></a></li>
+            <li><a href="vehiculos.html"><i class="fa-solid fa-truck"></i><span>Vehículos</span></a></li>
+            <li><a href="choferes.html"><i class="fa-solid fa-user"></i></i><span>Choferes</span></a></li>
+            <li><a href="reportes.html"><i class="fa-solid fa-file-alt"></i><span>Reportes</span></a></li>
+        </ul>
+    </nav>
+
+    <div class="routes-container">
+        <aside class="routes-list">
+            <header>
+                <div class="logo-container">
+                    <div class="logo">
+                        <img src="/html/img/logo.png" alt="NUMA logo">
+                    </div>
+                    <div>
+                        <h1>NUMA Movil</h1>
+                        <p class="muted">ADMINISTRADOR--RUTAS </p>
+                    </div>
+                </div>
+            </header>
+            <div class="list-header">
+                <button id="btn-new-route"><i class="fa-solid fa-plus"></i> Crear</button>
+                <input id="search-route" type="search" placeholder="Buscar..." aria-label="Buscar route" />
+            </div>
+            <ul id="route-items"></ul>
+        </aside>
+
+        <section class="route-detail" id="route-detail">
+            <p>Selecciona una ruta para ver detalles.</p>
+        </section>
+    </div>
+
+    <div id="new-route-panel" class="new-route-panel">
+        <div class="panel-header">
+            <h2 id="panel-title">Nueva ruta</h2>
+            <button id="close-panel">&times;</button>
+        </div>
+        <form id="form-new-route">
+            <input type="hidden" id="route-id" />
+            <label for="route-name">Nombre</label>
+            <input type="text" id="route-name" required />
+
+            <label for="route-color">Color</label>
+            <input type="color" id="route-color" value="#f357a1" />
+
+            <label for="route-vehicle">Asignar Vehículo</label>
+            <select id="route-vehicle">
+                <option value="">-- Sin asignar --</option>
+            </select>
+            <label>Chofer</label>
+            <select id="route-driver"></select>
+
+            <div class="map-controls">
+                <button type="button" id="btn-start-draw" class="draw-btn" title="Iniciar trazo">📍</button>
+                <button type="button" id="btn-add-final-point" class="draw-btn" title="Añadir punto final"
+                    disabled>🏁</button>
+                <button type="button" id="btn-undo-point" class="draw-btn" title="Deshacer último punto"
+                    disabled>↩️</button>
+                <button type="button" id="btn-stop-draw" class="draw-btn" title="Detener trazo" disabled>✋</button>
+            </div>
+
+            <div id="draw-map" class="draw-map"></div>
+
+            <button id="submit-route" type="submit">Crear ruta</button>
+        </form>
+    </div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="./js/routes.js"></script>
+</body>
+
+</html>

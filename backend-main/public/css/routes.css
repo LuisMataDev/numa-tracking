@@ -1,0 +1,577 @@
+/* routes.css
+   Estilo moderno, amigable e intuitivo para la sección "Rutas".
+   - Sidebar expandible al pasar el mouse
+   - Lista de rutas tipo tarjetas
+   - Panel deslizante para crear nueva ruta
+   - Contenedor de detalle con mapa (compatible con Leaflet)
+   - Estilos accesibles y responsive
+*/
+
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --muted: #64748b;
+  --text: #0f1724;
+  --sidebar-bg: linear-gradient(180deg, #0b1228 0%, #0f1b36 100%);
+  --accent: #6c8cff;
+  /* color principal (cámbialo si prefieres) */
+  --accent-2: #f357a1;
+  /* color alterno (el input color por defecto) */
+  --glass: rgba(255, 255, 255, 0.06);
+  --shadow: 0 6px 18px rgba(12, 20, 33, 0.08);
+  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --gap: 18px;
+  font-synthesis: none;
+}
+
+* {
+  box-sizing: border-box
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  min-height: 100vh;
+}
+
+/* --------------------------- Sidebar --------------------------- */
+#sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 76px;
+  /* ancho colapsado */
+  background: var(--sidebar-bg);
+  color: #fff;
+  display: flex;
+  align-items: flex-start;
+  padding: 18px 8px;
+  transition: width .28s cubic-bezier(.2, .9, .3, 1);
+  z-index: 40;
+  overflow: hidden;
+}
+
+#sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+#sidebar li {
+  display: block;
+  margin: 8px 0;
+  padding-bottom: 100px;
+}
+
+#sidebar a {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+  color: inherit;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background .18s, transform .12s;
+  width: 100%;
+}
+
+#sidebar a i {
+  font-size: 18px;
+  width: 22px;
+  text-align: center;
+}
+
+#sidebar a span {
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: 15px;
+  opacity: 0;
+  transform: translateX(-6px);
+  transition: opacity .18s, transform .18s;
+}
+
+#sidebar a:hover {
+  background: rgba(255, 255, 255, 0.04);
+  transform: translateY(-2px);
+}
+
+#sidebar a.active {
+  box-shadow: inset 4px 0 0 0 var(--accent);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Expandir al pasar el mouse para mostrar etiquetas */
+#sidebar:hover {
+  width: 220px;
+}
+
+#sidebar:hover a span {
+  opacity: 1;
+  transform: none;
+}
+
+/* Ajuste del contenido principal cuando el sidebar se expande */
+#sidebar+.routes-container {
+  margin-left: 76px;
+  transition: margin-left .28s cubic-bezier(.2, .9, .3, 1);
+  width: calc(100% - 76px);
+}
+
+#sidebar:hover+.routes-container {
+  margin-left: 220px;
+  width: calc(100% - 220px);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: -0.2px;
+}
+header img{
+  width: 56px;
+  height: 56px;
+}
+.logo-container{
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  background-color: #0b1228;
+  padding: 5px 10px;
+  color: #fff;
+  border-radius: 10px;
+}
+
+/* ---------------------- Contenedor principal -------------------- */
+.routes-container {
+  display: flex;
+  gap: var(--gap);
+  align-items: flex-start;
+  padding: 26px;
+  width: 100%;
+}
+
+#search-route {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(15, 23, 36, 0.1);
+    background: var(--bg);
+    width: 10px;
+}
+
+.routes-list {
+  flex: 0 0 360px;
+  min-width: 260px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.55));
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(6px) saturate(120%);
+}
+
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.list-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+#btn-new-route {
+  background: linear-gradient(90deg, var(--accent), #8fa8ff);
+  color: white;
+  border: 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  box-shadow: 0 6px 14px rgba(108, 140, 255, 0.16);
+}
+
+#btn-new-route:active {
+  transform: translateY(1px);
+}
+
+#route-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+   border-radius: var(--radius-lg);
+  border-radius: 10px;
+}
+
+.route-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  transition: background .16s, box-shadow .16s, transform .12s;
+}
+
+.route-item:hover {
+  background: rgba(11, 17, 34, 0.03);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(12, 20, 33, 0.04);
+}
+
+.route-bullet {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  box-shadow: 0 6px 18px rgba(12, 20, 33);
+}
+
+.route-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.route-meta h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.route-meta small {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.route-item.active {
+  background: linear-gradient(90deg, rgba(108, 140, 255, 0.08), rgba(243, 87, 161, 0.02));
+  border: 1px solid rgba(108, 140, 255, 0.08);
+}
+
+/* ------------------------ Detalle y mapa ------------------------ */
+.route-detail {
+  flex: 1;
+  min-width: 360px;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.route-detail p {
+  color: var(--muted);
+  margin: 6px 0;
+}
+
+/* Placeholder o contenedor de mapa (compatible con Leaflet) */
+.route-detail .map {
+  height: 62vh;
+  border-radius: 12px;
+  overflow: auto;
+  border: 1px solid rgba(15, 23, 36, 0.04);
+  box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.02);
+
+}
+
+/* ----------------------- Panel deslizante ---------------------- */
+.new-route-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100vh;
+  width: 1000px;
+  max-width: 92vw;
+  background: var(--surface);
+  box-shadow: -18px 0 34px rgba(12, 20, 33, 0.12);
+  transform: translateX(110%);
+  transition: transform .32s cubic-bezier(.22, .9, .28, 1);
+  z-index: 60;
+  padding: 18px;
+  border-radius: 12px 0 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.new-route-panel #map,
+.new-route-panel .map,
+.new-route-panel .map-container,
+.new-route-panel .leaflet-container {
+  width: 100%;
+  /* mantiene el mismo ancho del panel */
+  flex: 1 1 auto;
+  /* ocupa el espacio vertical restante */
+  min-height: 320px;
+  /* evita que se haga demasiado pequeño; ajusta si quieres */
+  height: 100%;
+  /* útil para Leaflet: el contenedor debe tener altura */
+}
+
+.new-route-panel.open {
+  transform: translateX(0);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.panel-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+
+#close-panel {
+  background: transparent;
+  border: 0;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--muted);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+label {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+input[type="text"],
+input[type="color"],
+textarea,
+select {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(15, 23, 36, 0.5);
+  background: transparent;
+  font-size: 14px;
+  outline: none;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  box-shadow: 0 8px 20px rgba(108, 140, 255, 0.08);
+  border-color: rgba(108, 140, 255, 0.16);
+}
+
+#draw-map {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#submit-route{
+  background: linear-gradient(90deg, var(--accent), #8fa8ff);
+  color: white;
+  text-align: center;
+  border: 0;
+  padding: 8px 400px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  box-shadow: 0 6px 14px rgba(108, 140, 255, 0.16);
+}
+
+.draw-btn {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px dashed rgba(15, 23, 36, 0.06);
+  background: var(--text);
+  cursor: pointer;
+  font-size: 15px;
+  box-shadow: 0 8px 20px rgba(108, 140, 255, 0.08);
+
+}
+
+.draw-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#create-route {
+  margin-top: 6px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  color: white;
+  border: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(108, 140, 255, 0.12);
+}
+
+/* ------------------------ Pequeñas utilidades -------------------- */
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+
+.pdf-content-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.pdf-route-item {
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.pdf-route-header {
+    margin-bottom: 10px;
+}
+
+.pdf-route-header h3 {
+    margin: 0;
+    font-size: 14px;
+}
+
+.pdf-route-header span {
+    font-size: 11px;
+    color: #666;
+}
+
+.pdf-route-body {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.pdf-map-image {
+    width: 250px;
+    height: auto;
+    border: 1px solid #ccc;
+}
+
+.pdf-route-times p {
+    margin: 4px 0;
+    font-size: 12px;
+}
+
+/* ------------------------- Responsive --------------------------- */
+@media (max-width:900px) {
+  #sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+  }
+
+  #sidebar ul {
+    display: flex;
+    gap: 8px;
+  }
+
+  #sidebar a span {
+    display: none;
+  }
+
+  #sidebar+.routes-container {
+    margin-left: 0;
+    margin-top: 64px;
+  }
+
+  .routes-container {
+    padding: 12px;
+    flex-direction: column;
+  }
+
+  .routes-list {
+    width: 100%;
+    order: 2;
+  }
+
+  .route-detail {
+    order: 1;
+  }
+
+  .new-route-panel {
+    width: 100%;
+    max-width: 100vw;
+    border-radius: 0;
+  }
+}
+
+/* ------------------------ Focus & accesibilidad ---------------- */
+a:focus,
+button:focus,
+input:focus {
+  outline: 3px solid rgba(108, 140, 255, 0.14);
+  outline-offset: 2px;
+}
+
+/* ------------------------ Pequeños toques visuales ------------- */
+.route-bullet {
+  font-size: 14px;
+  color: white;
+}
+
+.route-bullet[data-color] {
+  box-shadow: none;
+}
+
+/* Ejemplo: si el JS pone data-color en .route-bullet, usarlo */
+.route-bullet[data-color] {
+  background: var(--accent);
+}
+
+/* Fin */

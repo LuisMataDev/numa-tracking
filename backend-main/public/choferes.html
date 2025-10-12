@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <title>Sección Choferes</title>
+  <link rel="stylesheet" href="./css/choferes.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    integrity="sha512-…" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="icon" type="image/png" sizes="16x16" href="html/img/logo.png">
+</head>
+
+<body>
+  <!-- Sidebar fijo -->
+  <nav id="sidebar">
+    <ul>
+      <li><a href="index.html"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
+      <li><a href="routes.html"><i class="fa-solid fa-route"></i><span>Rutas</span></a></li>
+      <li><a href="vehiculos.html"><i class="fa-solid fa-truck"></i><span>Vehículos</span></a></li>
+      <li><a href="choferes.html" class="active"><i class="fa-solid fa-user"></i></i><span>Choferes</span></a></li>
+      <li><a href="reportes.html"><i class="fa-solid fa-file-alt"></i><span>Reportes</span></a></li>
+    </ul>
+  </nav>
+
+  <!-- Contenedor principal -->
+  <div class="choferes-container">
+    <!-- Panel izquierdo -->
+
+    <aside class="choferes-list">
+
+      <header>
+        <div class="logo-container">
+          <div class="logo">
+            <img src="/html/img/logo.png" alt="NUMA logo">
+          </div>
+          <div>
+            <h1>NUMA Movil</h1>
+            <p class="muted">ADMINISTRADOR--CHOFERES </p>
+          </div>
+        </div>
+      </header>
+
+      <div class="list-header">
+        <input id="search-driver" type="search" placeholder="Buscar..." aria-label="Buscar chofer" />
+        <button id="btn-new-chofer"><i class="fa-solid fa-plus"></i> Nuevo</button>
+      </div>
+
+      <ul id="chofer-items">
+        <li class="chofer-item">
+
+        </li>
+      </ul>
+    </aside>
+
+    <!-- Panel derecho -->
+    <section class="chofer-detail" id="chofer-detail">
+      <p>Selecciona un chofer para ver sus detalles.</p>
+
+
+      <!-- Formulario oculto -->
+      <form id="form-new-chofer" class="hidden">
+        <label for="chofer-name">ID</label>
+        <input type="text" id="chofer-name" required />
+
+        <label for="chofer-license">Nombre</label>
+        <input type="text" id="chofer-license" required />
+
+        <label for="chofer-phone">Teléfono</label>
+        <input type="text" id="chofer-phone" />
+
+        <label for="chofer-phone">Correo Elecronico</label>
+        <input type="email" id="chofer-phone" />
+
+        <label for="chofer-phone">Teléfono</label>
+        <input type="text" id="chofer-phone" />
+
+        <button type="submit">Registrar</button>
+      </form>
+    </section>
+  </div>
+  <script src="./js/choferes.js"></script>
+</body>
+
+</html>

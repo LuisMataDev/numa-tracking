@@ -1,0 +1,381 @@
+:root {
+    --bg: #f5f7fb;
+    --surface: #ffffff;
+    --muted: #64748b;
+    --text: #0f1724;
+    --sidebar-bg: linear-gradient(180deg, #0b1228 0%, #0f1b36 100%);
+    --accent: #6c8cff;
+    /* color principal */
+    --accent-2: #f357a1;
+    /* color alterno */
+    --glass: rgba(255, 255, 255, 0.06);
+    --shadow: 0 6px 18px rgba(12, 20, 33, 0.08);
+    --radius-lg: 14px;
+    --radius-sm: 8px;
+    --gap: 18px;
+    font-synthesis: none;
+}
+
+body {
+    margin: 0;
+    font-family: Inter, ui-sans-serif, system-ui, Roboto, Arial;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+#sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 76px;
+    /* ancho colapsado */
+    background: var(--sidebar-bg);
+    color: #fff;
+    display: flex;
+    align-items: flex-start;
+    padding: 18px 8px;
+    transition: width .28s cubic-bezier(.2, .9, .3, 1);
+    z-index: 40;
+    overflow: hidden;
+}
+
+#sidebar ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+}
+
+#sidebar li {
+    display: block;
+    margin: 8px 0;
+    padding-bottom: 100px;
+}
+
+#sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    text-decoration: none;
+    color: inherit;
+    padding: 10px 12px;
+    border-radius: 10px;
+    transition: background .18s, transform .12s;
+    width: 100%;
+}
+
+#sidebar a i {
+    font-size: 18px;
+    width: 22px;
+    text-align: center;
+}
+
+#sidebar a span {
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 15px;
+    opacity: 0;
+    transform: translateX(-6px);
+    transition: opacity .18s, transform .18s;
+}
+
+#sidebar a:hover {
+    background: rgba(255, 255, 255, 0.04);
+    transform: translateY(-2px);
+}
+
+#sidebar a.active {
+    box-shadow: inset 4px 0 0 0 var(--accent);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+/* Expandir al pasar el mouse para mostrar etiquetas */
+#sidebar:hover {
+    width: 220px;
+}
+
+#sidebar:hover a span {
+    opacity: 1;
+    transform: none;
+}
+
+/* Ajuste del contenido principal cuando el sidebar se expande */
+#sidebar+.vehiculos-container {
+    margin-left: 76px;
+    transition: margin-left .28s cubic-bezier(.2, .9, .3, 1);
+    width: calc(100% - 76px);
+}
+
+#sidebar:hover+.vehiculos-container {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+}
+
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 20px;
+    letter-spacing: -0.2px;
+}
+
+header img {
+    width: 56px;
+    height: 56px;
+}
+
+.logo-container {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    background-color: #0b1228;
+    padding: 5px 10px;
+    color: #fff;
+    border-radius: 10px;
+}
+
+.vehiculos-container {
+    display: flex;
+    gap: var(--gap);
+    padding: 26px;
+    width: 100%;
+}
+
+/* Panel izquierdo */
+.vehiculos-list {
+    flex: 0 0 340px;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    box-shadow: var(--shadow);
+}
+
+.list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.list-header h2 {
+    font-size: 18px;
+    margin: 0;
+}
+
+#search-vehicle {
+    flex-grow: 1;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(15, 23, 36, 0.1);
+    background: var(--bg);
+}
+
+#btn-new-vehiculo {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-weight: 700;
+}
+
+#vehiculo-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.vehiculo-item {
+
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+
+}
+
+.vehiculo-item:hover {
+    background: rgba(11, 17, 34, 0.05);
+}
+
+.vehiculo-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 18px;
+}
+
+.vehiculo-info h3,
+.vehiculo-info p {
+    margin: 0;
+    line-height: 1.2;
+}
+
+.vehiculo-info h3 {
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.vehiculo-info p {
+    font-size: 13px;
+    color: var(--muted);
+}
+
+/* Panel derecho */
+#vehiculo-detail {
+    flex: 1;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Formulario dentro del template */
+#vehicle-form {
+
+    flex: 1;
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    flex-direction: column;
+
+}
+
+
+#vehicle-form h2,
+#form-title {
+    margin: 0 0 4px 0;
+    font-size: 1.25rem;
+    line-height: 1.2;
+}
+
+/* Etiquetas */
+#vehicle-form label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text, #0f1724);
+}
+
+/* Inputs y select */
+#vehicle-form input[type="text"],
+#vehicle-form input[type="number"],
+#vehicle-form select {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(15, 23, 36, 0.1);
+    background: white;
+    font-size: 0.95rem;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+    transition: box-shadow .12s ease, border-color .12s ease;
+}
+
+/* Placeholder y valores numéricos */
+#vehicle-form input::placeholder {
+    color: rgba(15, 23, 36, 0.35);
+}
+
+/* Focus accesible */
+#vehicle-form input:focus,
+#vehicle-form select:focus {
+    border-color: rgba(108, 140, 255, 0.9);
+    box-shadow: 0 0 0 4px rgba(108, 140, 255, 0.08);
+}
+
+/* Group acciones (botones) */
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+/* Botón principal */
+.primary-btn {
+    background: linear-gradient(90deg, var(--accent), #8fa8ff);
+    color: white;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95rem;
+    box-shadow: 0 6px 18px rgba(12, 20, 33, 0.08);
+    transition: transform .08s ease, box-shadow .08s ease, opacity .08s ease;
+}
+
+/* Hover / Active */
+.primary-btn:hover {
+    transform: translateY(-1px);
+}
+
+.primary-btn:active {
+    transform: translateY(0);
+}
+
+.primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Botón secundario (cancel) */
+.secondary-btn,
+#btn-cancel-form {
+    background: transparent;
+    color: var(--text, #0f1724);
+    border: 1px solid rgba(15, 23, 36, 0.08);
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+/* Oculto reutilizable */
+.hidden {
+    display: none !important;
+}
+
+/* Estilos responsivos pequeños */
+@media (max-width: 420px) {
+    .vehicle-detail {
+        padding: 14px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+        align-items: stretch;
+    }
+
+    .primary-btn,
+    .secondary-btn {
+        width: 100%;
+    }
+}
