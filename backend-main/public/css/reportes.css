@@ -461,31 +461,144 @@ body.modal-open .modal {
 }
 
 /* --- Responsive (sin cambios) --- */
-@media (max-width: 900px) {
-    #sidebar {
-        height: 64px;
-        width: 100%;
-        top: 0;
-        left: 0;
-        right: 0;
-    }
+/* --- Tabletas y Móviles Grandes (hasta 992px) --- */
+@media (max-width: 992px) {
+  /* Convertir sidebar en barra de navegación superior */
+  #sidebar {
+    height: 70px;
+    width: 100%;
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 16px;
+    overflow-x: auto;
+    /* Para permitir scroll si hay muchos ítems */
+    transition: none;
+  }
 
-    #sidebar ul {
-        display: flex;
-    }
+  #sidebar ul {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    white-space: nowrap;
+    /* Evita que los ítems se rompan en varias líneas */
+  }
 
-    #sidebar a span {
-        display: none;
-    }
+  #sidebar li {
+    margin: 0;
+    padding-bottom: 0;
+    /* Anular padding del desktop */
+  }
 
-    .reports-container {
-        margin-left: 0;
-        margin-top: 64px;
-        padding: 16px;
-    }
+  #sidebar a span {
+    opacity: 1;
+    /* Mostrar siempre el texto del menú */
+    transform: none;
+    display: inline-block;
+    font-size: 15px;
+  }
 
-    .filters-bar {
-        flex-direction: column;
-        align-items: stretch;
-    }
+  #sidebar:hover {
+    width: 100%;
+    /* Anular la expansión del sidebar en hover */
+  }
+
+  /* Ajustar el contenedor principal */
+  .reports-container {
+    margin-left: 0;
+    margin-top: 70px;
+    /* Espacio para la barra superior fija */
+    padding: 20px;
+    transition: none;
+  }
+
+  #sidebar:hover+.reports-container {
+    margin-left: 0;
+    /* Anular el efecto de hover */
+  }
+
+  /* Apilar los filtros verticalmente */
+  .filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+    /* Los elementos se estiran al 100% */
+    padding: 16px;
+  }
+
+  .filters-left,
+  .filters-right {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+/* --- Móviles (hasta 600px) --- */
+@media (max-width: 600px) {
+  .reports-container {
+    padding: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 22px;
+  }
+
+  /* Ajustar filtros para ocupar el ancho completo */
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group select {
+    min-width: 100%;
+  }
+
+  .filters-right {
+    margin-top: 10px;
+  }
+
+  /* Botones de fecha más flexibles */
+  .date-filter-group {
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  /* Tarjetas de reporte en una sola columna */
+  .results-grid {
+    grid-template-columns: 1fr;
+    /* Forzar una sola columna */
+    gap: 16px;
+  }
+
+  /* Ajustes del Modal para pantallas pequeñas */
+  .modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding: 16px;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+  }
+
+  .pdf-preview-page {
+    padding: 15px;
+  }
+
+  .pdf-header-text h1 {
+    font-size: 16px;
+  }
+
+  .pdf-table {
+    font-size: 10px;
+    /* Reducir texto de la tabla para que quepa mejor */
+  }
+
+  .pdf-table th,
+  .pdf-table td {
+    padding: 5px;
+  }
 }
