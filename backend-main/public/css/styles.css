@@ -355,125 +355,6 @@ section#principal {
   background-color: #e74c3c;
   color: white;
 }
-
-/* ------------------------ Responsive --------------------------- */
-@media (max-width: 900px) {
-  #sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 76px;
-    /* altura de la barra superior */
-    width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 10px 12px;
-    overflow-x: auto;
-    /* permite desplazar si hay muchos items */
-    white-space: nowrap;
-    z-index: 60;
-    transition: none;
-    /* desactivar transiciones de ancho por hover */
-  }
-
-  /* Lista horizontal */
-  #sidebar ul {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-    padding-left: 0;
-  }
-
-  /* Items en línea */
-  #sidebar li {
-    display: inline-block;
-    margin: 0 6px;
-    padding-bottom: 0;
-  }
-
-  /* Enlaces: icono + texto en fila */
-  #sidebar a {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-radius: 8px;
-    width: auto;
-    /* no forzar ancho al 100% */
-    transform: none;
-  }
-
-  /* Iconos ligeramente más grandes si quieres */
-  #sidebar a i {
-    font-size: 18px;
-    width: auto;
-    text-align: center;
-  }
-
-  /* Mostrar siempre las etiquetas (si prefieres ocultarlas, pon opacity:0) */
-  #sidebar a span {
-    opacity: 1;
-    transform: none;
-    white-space: nowrap;
-    font-size: 15px;
-    display: inline-block;
-  }
-
-  /* DESHABILITAR la expansión por hover en móvil:
-     anulamos la regla #sidebar:hover { width: 220px } del CSS de escritorio */
-  #sidebar:hover {
-    width: 100%;
-    transition: none;
-  }
-
-  #sidebar:hover a span {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* Ajustar el contenido principal: usar margin-top en lugar de margin-left */
-  #sidebar+#main-content {
-    margin-left: 0;
-    margin-top: 76px;
-    /* deja espacio para la barra superior */
-    width: 100%;
-    transition: none;
-  }
-
-  h1 {
-    visibility: hidden;
-    position: absolute;
-  }
-
-  #main-content {
-    padding: 12px;
-    width: 100%;
-  }
-
-  .kpi-container {
-    position: relative;
-    gap: 8px;
-    flex-wrap: nowrap;
-  }
-
-  .kpi-container span {
-    visibility: hidden;
-    position: absolute;
-
-  }
-
-  #draw-map {
-
-    position: absolute;
-    /* se mantiene siempre en pantalla */
-    top: 150px;
-    left: 10px;
-    right: 10px;
-
-  }
-}
-
 /* ------------------------ Focus & accesibilidad ---------------- */
 a:focus,
 button:focus,
@@ -496,5 +377,105 @@ input:focus {
   height: 62vh;
   border-radius: 12px;
 }
+/* ------------------------ Responsive --------------------------- */
+@media (max-width: 992px) {
+  /* Convertir sidebar en barra de navegación superior */
+  #sidebar {
+    height: 70px;
+    width: 100%;
+    bottom: auto;
+    flex-direction: row;
+    align-items: center;
+    padding: 0 16px;
+    overflow-x: auto;
+    transition: none;
+  }
+
+  #sidebar ul {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+
+  #sidebar li {
+    margin: 0;
+    padding-bottom: 0; /* Anular padding del desktop */
+  }
+
+  #sidebar a span {
+    opacity: 1; /* Mostrar siempre el texto */
+    transform: none;
+  }
+  
+  #sidebar:hover {
+    width: 100%; /* Anular expansión */
+  }
+
+  #sidebar+#main-content {
+    margin-left: 0;
+    margin-top: 70px; /* Espacio para la barra superior */
+    width: 100%;
+    transition: none;
+  }
+
+  #main-content {
+    padding: 16px;
+  }
+
+  /* Ajustar header para apilar logo y KPIs */
+  header {
+    flex-direction: column;
+    align-items: flex-start; /* Alinear todo a la izquierda */
+    gap: 20px;
+  }
+
+  .kpi-container {
+    width: 100%; /* Ocupar todo el ancho */
+  }
+}
+
+/* --- Móviles (hasta 600px) --- */
+@media (max-width: 600px) {
+  body {
+    font-size: 14px;
+  }
+  
+  #sidebar {
+    padding: 0 8px; /* Menos padding en la barra superior */
+  }
+  
+  #sidebar a {
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  
+  #sidebar a span {
+    font-size: 14px; /* Texto de navegación más pequeño */
+  }
+
+  .logo-container {
+    padding: 5px 8px;
+  }
+
+  header h1 {
+    font-size: 18px; /* Título principal más pequeño */
+  }
+
+  /* Ocultar el texto de los KPIs para ahorrar espacio, dejando solo el valor y el ícono */
+  .kpi-card {
+    padding: 8px 12px;
+    min-width: 0; /* Permitir que se encojan más */
+  }
+  
+  .kpi-label {
+    font-size: 11px;
+  }
+
+  .info-card {
+     /* Cada tarjeta ocupa toda una fila */
+    flex-basis: 100%;
+  }
+}
+
 
 /* Fin */
