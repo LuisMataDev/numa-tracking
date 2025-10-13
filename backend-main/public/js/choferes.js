@@ -87,19 +87,19 @@ document.addEventListener('DOMContentLoaded', () => {
             <form id="driver-form">
                 <h2>${mode === 'create' ? 'Nuevo Chofer' : 'Editar Chofer'}</h2>
                 <label for="chofer-id">ID</label>
-                <input type="text" id="chofer-id" value="${driver ? driver.id : ''}" ${mode === 'edit' ? 'readonly' : ''} required />
+                <input type="text" id="chofer-id" placeholder="CH123" value="${driver ? driver.id : ''}" ${mode === 'edit' ? 'readonly' : ''} required />
 
                 <label for="chofer-name">Nombre</label>
-                <input type="text" id="chofer-name" value="${driver ? driver.name : ''}" required />
+                <input type="text" id="chofer-name" placeholder="Luis Mata" value="${driver ? driver.name : ''}" required />
 
                 <label for="chofer-license">Licencia</label>
-                <input type="text" id="chofer-license" value="${driver ? driver.license : ''}" required />
+                <input type="text" id="chofer-license" placeholder="11A122B23C" value="${driver ? driver.license : ''}" required />
 
                 <label for="chofer-phone">Teléfono</label>
-                <input type="text" id="chofer-phone" value="${driver ? driver.phone : ''}" />
+                <input type="text" id="chofer-phone" placeholder="1234567890" value="${driver ? driver.phone : ''}" />
 
                 <label for="chofer-email">Correo Electrónico</label>
-                <input type="email" id="chofer-email" value="${driver ? driver.email : ''}" />
+                <input type="email" id="chofer-email" placeholder="chofer@123@gmail.com" value="${driver ? driver.email : ''}" />
                 
                 <div class="form-actions">
                     <button type="submit" class="primary-btn">${mode === 'create' ? 'Registrar' : 'Guardar Cambios'}</button>
