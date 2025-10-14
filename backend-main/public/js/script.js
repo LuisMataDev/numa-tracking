@@ -137,14 +137,18 @@ async function updateAll() {
 async function updateKPIs() {
     try {
         const res = await fetch('/api/routes');
+        const cho = await fetch('/api/drivers');
         if (!res.ok) throw new Error('Error al cargar rutas');
         const routesData = await res.json();
+        const driversData = await cho.json();
         const pendingCount = routesData.filter(r => r.estado === 'pendiente').length;
         const inProgressCount = routesData.filter(r => r.estado === 'en curso').length;
         const completedCount = routesData.filter(r => r.estado === 'finalizada').length;
+        const driversOnActive = driversData.filter(r => r.estado === 'active-ocupado').length;
         document.getElementById('kpi-activos').textContent = pendingCount;
         document.getElementById('kpi-rutas').textContent = inProgressCount;
         document.getElementById('kpi-alertas').textContent = completedCount;
+        document.getElementById('kpi-distancia').textContent = driversOnActive;
     } catch (err) {
         console.error('Error al actualizar KPIs:', err);
     }
