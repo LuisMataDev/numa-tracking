@@ -44,6 +44,7 @@
 
         <section class="route-detail" id="route-detail">
             <p>Selecciona una ruta para ver detalles.</p>
+
         </section>
     </div>
 
@@ -60,12 +61,23 @@
             <label for="route-color">Color</label>
             <input type="color" id="route-color" value="#f357a1" />
 
+
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider round"></span>
+            </label>
+
+
             <label for="route-vehicle">Asignar Vehículo</label>
             <select id="route-vehicle">
                 <option value="">-- Sin asignar --</option>
             </select>
             <label>Chofer</label>
             <select id="route-driver"></select>
+
+            <div class="rute_no_traze">
+                <input type="checkbox" switch name="" id="">
+            </div>
 
             <div class="map-controls">
                 <button type="button" id="btn-start-draw" class="draw-btn" title="Iniciar trazo">📍</button>
