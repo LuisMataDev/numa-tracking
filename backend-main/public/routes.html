@@ -62,10 +62,13 @@
             <input type="color" id="route-color" value="#f357a1" />
 
 
-            <label class="switch">
-                <input type="checkbox">
-                <span class="slider round"></span>
-            </label>
+            <div class="form-switch-group">
+                <label for="route-without-traze">Ruta sin trazo</label>
+                <label class="switch">
+                    <input type="checkbox" id="without-traze-switch">
+                    <span class="slider round"></span>
+                </label>
+            </div>
 
 
             <label for="route-vehicle">Asignar Vehículo</label>
@@ -75,9 +78,7 @@
             <label>Chofer</label>
             <select id="route-driver"></select>
 
-            <div class="rute_no_traze">
-                <input type="checkbox" switch name="" id="">
-            </div>
+
 
             <div class="map-controls">
                 <button type="button" id="btn-start-draw" class="draw-btn" title="Iniciar trazo">📍</button>

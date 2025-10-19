@@ -273,3 +273,57 @@ form button {
 .hidden {
   display: none;
 }
+
+/* Estilos para el Skeleton Loader de Choferes */
+.skeleton-driver-item {
+  display: flex;
+  align-items: center;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #fff;
+}
+
+/* Círculo que simula el ícono del usuario */
+.skeleton-icon {
+  width: 40px;
+  height: 40px;
+  background-color: #e0e0e0;
+  border-radius: 50%; /* Para hacerlo un círculo */
+  margin-right: 15px;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-driver-info {
+  flex-grow: 1;
+}
+
+/* Barras grises que simulan el texto */
+.skeleton-text {
+  height: 14px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+.skeleton-text.title {
+  width: 60%;
+  height: 18px; /* Un poco más alto para el nombre */
+  margin-bottom: 8px;
+}
+
+.skeleton-text.subtitle {
+  width: 40%; /* Más corto para el ID */
+}
+
+/* Animación de pulso (puedes omitirla si ya la tienes de la vez anterior) */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+  50% {
+    background-color: #f0f0f0;
+  }
+  100% {
+    background-color: #e0e0e0;
+  }
+}

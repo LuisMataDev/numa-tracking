@@ -10,8 +10,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // Almacenamos los vehículos en variable de estado
     let vehicles = [];
 
+    function showVehicleSkeletonLoader(count = 8) {
+    vehicleListElement.innerHTML = ''; // Limpia la lista actual
+    for (let i = 0; i < count; i++) {
+        const li = document.createElement('li');
+        li.className = 'skeleton-item'; // Usamos la nueva clase CSS
+        li.innerHTML = `
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-info">
+                <div class="skeleton-text title"></div>
+                <div class="skeleton-text subtitle"></div>
+            </div>
+        `;
+        vehicleListElement.appendChild(li);
+    }
+}
+
     // Función principal para obtener datos de la API
     async function fetchData() {
+        showVehicleSkeletonLoader(); // <-- AÑADE ESTA LÍNEA AQUÍ
         try {
             const vehiclesResponse = await fetch('/api/vehicles');
             vehicles = await vehiclesResponse.json();

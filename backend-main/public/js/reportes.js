@@ -25,11 +25,40 @@ document.addEventListener('DOMContentLoaded', () => {
         drivers: [],
         vehicles: [],
         filteredRoutes: [],
-        activeDateFilter: 'month' // <-- CAMBIO: El filtro inicial ahora es el de mes
+        activeDateFilter: 'day' // <-- CAMBIO: El filtro inicial ahora es el de mes
     };
+
+    /**
+ * Muestra un loader de tipo "skeleton" en la cuadrícula de resultados de reportes.
+ * @param {number} count - El número de esqueletos a mostrar.
+ */
+function showReportSkeletonLoader(count = 6) {
+    resultsGrid.innerHTML = ''; // Limpia la cuadrícula
+
+    for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'skeleton-report-card'; // Usamos la nueva clase
+        card.innerHTML = `
+            <div class="skeleton-header">
+                <div class="skeleton-text title"></div>
+                <div class="skeleton-text meta"></div>
+            </div>
+            <div class="skeleton-body">
+                <div class="skeleton-text line"></div>
+                <div class="skeleton-text line"></div>
+                <div class="skeleton-text line"></div>
+            </div>
+            <div class="skeleton-footer">
+                <div class="skeleton-button"></div>
+            </div>
+        `;
+        resultsGrid.appendChild(card);
+    }
+}
 
     // --- 3. CARGA DE DATOS INICIAL ---
     async function fetchData() {
+        showReportSkeletonLoader();
         try {
             const [routesRes, driversRes, vehiclesRes] = await Promise.all([
                 fetch('/api/routes'),

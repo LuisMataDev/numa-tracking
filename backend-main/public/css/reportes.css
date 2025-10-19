@@ -460,6 +460,68 @@ body.modal-open .modal {
     text-align: right;
 }
 
+.skeleton-report-card {
+  background-color: #ffffff;
+  padding: 1.5rem; /* aprox. 24px */
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  opacity: 0.8;
+  border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem; /* Espacio entre secciones */
+}
+
+/* Barras grises genéricas */
+.skeleton-text {
+  height: 14px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+/* Variaciones específicas para la tarjeta de reporte */
+.skeleton-text.title {
+  width: 70%;
+  height: 20px;
+  margin-bottom: 10px;
+}
+
+.skeleton-text.meta {
+  width: 50%;
+  height: 12px;
+}
+
+.skeleton-text.line {
+  width: 85%;
+  margin-bottom: 8px;
+}
+.skeleton-text.line:last-child {
+  margin-bottom: 0;
+}
+
+.skeleton-button {
+  width: 110px;
+  height: 38px;
+  background-color: #e0e0e0;
+  border-radius: 8px;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+  margin-top: 0.5rem;
+}
+
+/* Animación de pulso (puedes omitirla si ya la tienes de los otros módulos) */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+  50% {
+    background-color: #f0f0f0;
+  }
+  100% {
+    background-color: #e0e0e0;
+  }
+}
+
 /* --- Responsive (sin cambios) --- */
 /* --- Tabletas y Móviles Grandes (hasta 992px) --- */
 @media (max-width: 992px) {

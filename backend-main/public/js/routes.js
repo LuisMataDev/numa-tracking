@@ -286,6 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cargar rutas, vehículos y choferes desde la API
     async function fetchData() {
+        showSkeletonLoader(); // <-- AÑADE ESTA LÍNEA AQUÍ
         try {
             const [routesRes, vehiclesRes, driversRes] = await Promise.all([
                 fetch('/api/routes'),
@@ -314,6 +315,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    /**
+ * Muestra un loader de tipo "skeleton" en la lista de rutas.
+ * @param {number} count - El número de elementos skeleton a mostrar.
+ */
+function showSkeletonLoader(count = 6) {
+    routeItems.innerHTML = ''; // Limpia la lista actual
+    for (let i = 0; i < count; i++) {
+        const li = document.createElement('li');
+        li.className = 'skeleton-item';
+        li.innerHTML = `
+            <div class="skeleton-content">
+                <div class="skeleton-info">
+                    <div class="skeleton-text title"></div>
+                    <div class="skeleton-text meta"></div>
+                </div>
+                <div class="skeleton-color-box"></div>
+            </div>
+        `;
+        routeItems.appendChild(li);
+    }
+}
     /**
      * Filtra las rutas basándose en una consulta y las renderiza en el panel.
      */

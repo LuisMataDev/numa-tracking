@@ -128,10 +128,31 @@ async function fetchDrivers() {
 }
 
 async function updateAll() {
+    showKpiSkeletonLoader();
     console.log("Actualizando todos los datos...");
     await fetchDrivers();
     await updateKPIs();
     await fetchAndDrawRoutes();
+}
+
+function showKpiSkeletonLoader() {
+    const kpiContainer = document.querySelector('.kpi-container');
+    if (!kpiContainer) return;
+
+    kpiContainer.innerHTML = ''; // Limpia el contenido actual
+
+    for (let i = 0; i < 4; i++) { // Creamos 4 esqueletos
+        const skeletonCard = document.createElement('div');
+        skeletonCard.className = 'kpi-card skeleton-card'; // Usamos ambas clases
+        skeletonCard.innerHTML = `
+            <div class="skeleton-icon"></div>
+            <div>
+                <div class="skeleton-text value"></div>
+                <div class="skeleton-text label"></div>
+            </div>
+        `;
+        kpiContainer.appendChild(skeletonCard);
+    }
 }
 
 async function updateKPIs() {
@@ -141,16 +162,60 @@ async function updateKPIs() {
         if (!res.ok) throw new Error('Error al cargar rutas');
         const routesData = await res.json();
         const driversData = await cho.json();
+
+        // --- INICIO DE LA MODIFICACIÓN ---
+        // 1. Reconstruye el HTML de las tarjetas de KPIs
+        const kpiContainer = document.querySelector('.kpi-container');
+        if (kpiContainer) {
+            kpiContainer.innerHTML = `
+                <div class="kpi-card">
+                    <i class="fa-solid fa-truck-moving"></i>
+                    <div>
+                        <span class="kpi-value" id="kpi-activos">0</span>
+                        <span class="kpi-label">Rutas pendientes</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <i class="fa-solid fa-route"></i>
+                    <div>
+                        <span class="kpi-value" id="kpi-rutas">0</span>
+                        <span class="kpi-label">Rutas en curso</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <i class="fa-solid fa-font-awesome"></i>
+                    <div>
+                        <span class="kpi-value" id="kpi-alertas">0</span>
+                        <span class="kpi-label">Rutas finalizadas</span>
+                    </div>
+                </div>
+                <div class="kpi-card">
+                    <i class="fa fa-users" aria-hidden="true"></i>
+                    <div>
+                        <span class="kpi-value" id="kpi-distancia">0</span>
+                        <span class="kpi-label">Choferes activos</span>
+                    </div>
+                </div>
+            `;
+        }
+        // --- FIN DE LA MODIFICACIÓN ---
+
+        // 2. Calcula y actualiza los valores (esta parte es la misma que ya tenías)
         const pendingCount = routesData.filter(r => r.estado === 'pendiente').length;
         const inProgressCount = routesData.filter(r => r.estado === 'en curso').length;
         const completedCount = routesData.filter(r => r.estado === 'finalizada').length;
-        const driversOnActive = driversData.filter(r => r.estado === 'active-ocupado').length;
+        const driversOnActive = driversData.filter(d => d.status === 'active-ocupado').length; // Corregido para usar `status` de driver
+
         document.getElementById('kpi-activos').textContent = pendingCount;
         document.getElementById('kpi-rutas').textContent = inProgressCount;
         document.getElementById('kpi-alertas').textContent = completedCount;
         document.getElementById('kpi-distancia').textContent = driversOnActive;
+
     } catch (err) {
         console.error('Error al actualizar KPIs:', err);
+        // Opcional: Mostrar un mensaje de error en lugar de los KPIs
+        const kpiContainer = document.querySelector('.kpi-container');
+        if (kpiContainer) kpiContainer.innerHTML = '<p class="muted">No se pudieron cargar los indicadores.</p>';
     }
 }
 

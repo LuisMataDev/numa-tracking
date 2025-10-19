@@ -377,6 +377,60 @@ input:focus {
   height: 62vh;
   border-radius: 12px;
 }
+
+.kpi-container .skeleton-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background-color: #ffffff; /* Fondo sólido para el skeleton */
+  opacity: 0.7;
+  padding: 10px 14px;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  min-width: 140px;
+}
+
+.kpi-container .skeleton-icon {
+  width: 30px;
+  height: 30px;
+  background-color: #e0e0e0;
+  border-radius: 50%; /* Círculo para el ícono */
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+.kpi-container .skeleton-info {
+  flex-grow: 1;
+}
+
+.kpi-container .skeleton-text {
+  height: 14px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  animation: skeleton-pulse 1.5s infinite ease-in-out;
+}
+
+.kpi-container .skeleton-text.value {
+  width: 40px; /* Ancho para el número */
+  height: 18px;
+  margin-bottom: 8px;
+}
+
+.kpi-container .skeleton-text.label {
+  width: 80px; /* Ancho para la etiqueta de texto */
+}
+
+/* Animación de pulso (si ya la tienes en tu CSS de los otros módulos, no necesitas repetirla) */
+@keyframes skeleton-pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+  50% {
+    background-color: #f0f0f0;
+  }
+  100% {
+    background-color: #e0e0e0;
+  }
+}
 /* ------------------------ Responsive --------------------------- */
 @media (max-width: 992px) {
   /* Convertir sidebar en barra de navegación superior */

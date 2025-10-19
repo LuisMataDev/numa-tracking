@@ -9,8 +9,29 @@ document.addEventListener('DOMContentLoaded', () => {
     // Almacenamos los choferes en una variable de estado global
     let drivers = [];
 
+/**
+ * Muestra un loader de tipo "skeleton" en la lista de choferes.
+ * @param {number} count - El número de elementos skeleton a mostrar.
+ */
+function showDriverSkeletonLoader(count = 8) {
+    driverListElement.innerHTML = ''; // Limpia la lista actual
+    for (let i = 0; i < count; i++) {
+        const li = document.createElement('li');
+        li.className = 'skeleton-driver-item'; // Usamos la nueva clase CSS
+        li.innerHTML = `
+            <div class="skeleton-icon"></div>
+            <div class="skeleton-driver-info">
+                <div class="skeleton-text title"></div>
+                <div class="skeleton-text subtitle"></div>
+            </div>
+        `;
+        driverListElement.appendChild(li);
+    }
+}
+
     // Función para obtener los choferes de la API
     async function fetchDrivers() {
+        showDriverSkeletonLoader(); // <-- AÑADE ESTA LÍNEA AQUÍ
         try {
             const response = await fetch('/api/drivers');
             if (!response.ok) {
