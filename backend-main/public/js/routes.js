@@ -2,12 +2,12 @@
 globalThis.L = L;
 
 document.addEventListener('DOMContentLoaded', async () => {
-    
+
     const socketIoScript = document.createElement('script');
     socketIoScript.src = '/socket.io/socket.io.js';
     document.head.appendChild(socketIoScript);
 
-    
+
     await new Promise(resolve => {
         socketIoScript.onload = () => resolve();
     });
@@ -36,6 +36,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const routeDriverSelect = document.getElementById('route-driver');
     const searchInput = document.getElementById('search-route');
     let isFinalPointSet = false;
+    const traceFreeSwitch = document.getElementById('trace-free-switch');
+    const drawHelperText = document.getElementById('draw-helper-text');
+
+    let isTraceFreeMode = false;
 
     const defaultCoords = [19.7677724, -104.3686507]; // Ubicación por si las moscas
 
@@ -49,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
             (position) => {
-               
+
                 const userLat = position.coords.latitude;
                 const userLng = position.coords.longitude;
                 const accuracy = position.coords.accuracy;
@@ -59,18 +63,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Dibuja el círculo de precisión
                 L.circle([userLat, userLng], { radius: accuracy }).addTo(drawMap);
 
-                
+
                 L.marker([userLat, userLng])
                     .addTo(drawMap)
                     .bindPopup(`<b>Tu ubicación (precisión: ${Math.round(accuracy)}m)</b>`)
                     .openPopup();
             },
             (error) => {
-                
+
                 console.warn(`Error de geolocalización (${error.code}): ${error.message}`);
-                
+
             },
-            { enableHighAccuracy: true } 
+            { enableHighAccuracy: true }
         );
     } else {
         console.error('Geolocalización no disponible en este navegador.');
@@ -78,53 +82,89 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const drawnItems = new L.FeatureGroup().addTo(drawMap);
     let tempCoords = [];
-    let tempPolyline = null; 
+    let tempPolyline = null;
     let drawing = false;
 
     // Estado local de datos
     let routes = [];
     let vehicles = [];
-    let drivers = []; 
+    let drivers = [];
     const driverStatusInfo = {
-        'active-desocupado': { text: 'Disponible', color: '#2ecc71' }, 
-        'active-ocupado': { text: 'En Ruta', color: '#f39c12' },   
-        'inactive': { text: 'Inactivo', color: '#95a5a6' }     
+        'active-desocupado': { text: 'Disponible', color: '#2ecc71' },
+        'active-ocupado': { text: 'En Ruta', color: '#f39c12' },
+        'inactive': { text: 'Inactivo', color: '#95a5a6' }
     };
     const defaultStatusInfo = { text: 'Desconocido', color: '#34495e' };
     // Funciones del mapa
     function addPoint(e) {
         if (!drawing) return;
         const { lat, lng } = e.latlng;
-        tempCoords.push([lat, lng]);
-        L.circleMarker([lat, lng], {
-            radius: 6,
-            color: document.getElementById('route-color').value
-        }).addTo(drawnItems);
-        btnUndoPoint.disabled = false;
-        btnAddFinalPoint.disabled = false;
 
-      
-        if (tempPolyline) {
-            tempPolyline.setLatLngs(tempCoords);
+        if (isTraceFreeMode) {
+            // --- Lógica para MODO SIN TRAZO ---
+            if (tempCoords.length >= 2) {
+                alert('Ya has establecido un punto de inicio y fin.');
+                return;
+            }
+
+            tempCoords.push([lat, lng]);
+
+            if (tempCoords.length === 1) {
+                // Es el punto de INICIO
+                L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'start-marker-icon',
+                        html: '<i class="fa-solid fa-location-dot" style="color:#2ecc71; font-size: 24px;"></i>'
+                    })
+                }).addTo(drawnItems);
+                drawHelperText.textContent = '¡Excelente! Ahora haz clic para marcar el punto final.';
+
+            } else if (tempCoords.length === 2) {
+                // Es el punto FINAL
+                L.marker([lat, lng], {
+                    icon: L.divIcon({
+                        className: 'end-marker-icon',
+                        html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>'
+                    })
+                }).addTo(drawnItems);
+
+                // Opcional: Dibuja una línea punteada para conectar los puntos en el panel
+                L.polyline(tempCoords, { color: '#6c8cff', weight: 4, dashArray: '10, 10' }).addTo(drawnItems);
+
+                drawHelperText.textContent = 'Puntos de inicio y fin establecidos.';
+                disableDrawing(); // Detiene el dibujo automáticamente
+            }
+
+        } else {
+            // --- Lógica ORIGINAL para trazar la ruta ---
+            tempCoords.push([lat, lng]);
+            L.circleMarker([lat, lng], {
+                radius: 6,
+                color: document.getElementById('route-color').value
+            }).addTo(drawnItems);
+
+            if (tempPolyline) {
+                tempPolyline.setLatLngs(tempCoords);
+            }
+
+            btnUndoPoint.disabled = false;
+            btnAddFinalPoint.disabled = false;
         }
-
-        btnUndoPoint.disabled = false;
-        btnAddFinalPoint.disabled = false;
     }
 
     function removeLastPoint() {
         if (tempCoords.length === 0) return;
         isFinalPointSet = false;
         tempCoords.pop();
-        drawnItems.clearLayers(); 
+        drawnItems.clearLayers();
 
-    
+
         tempPolyline = L.polyline(tempCoords, {
             color: document.getElementById('route-color').value,
             weight: 5
         }).addTo(drawnItems);
 
-  
+
         tempCoords.forEach(coord => {
             L.circleMarker(coord, {
                 radius: 6,
@@ -150,6 +190,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).addTo(drawnItems);
 
         isFinalPointSet = true; // <-- AÑADE ESTA LÍNEA
+    }
+    function updateDrawUI() {
+        if (isTraceFreeMode) {
+            btnStartDraw.innerHTML = '<i class="fa-solid fa-map-pin"></i> Colocar Puntos';
+            drawHelperText.textContent = 'Haz clic en el mapa para marcar el inicio y luego el fin de la ruta.';
+            // En modo sin trazo, estos botones no tienen sentido
+            btnUndoPoint.style.display = 'none';
+            btnAddFinalPoint.style.display = 'none';
+            btnStopDraw.style.display = 'none';
+        } else {
+            btnStartDraw.innerHTML = '📍';
+            btnStartDraw.title = 'Iniciar trazo';
+            drawHelperText.textContent = 'Haz clic en "Iniciar trazo" y luego en el mapa para añadir puntos.';
+            // Mostramos los botones de nuevo
+            btnUndoPoint.style.display = 'inline-block';
+            btnAddFinalPoint.style.display = 'inline-block';
+            btnStopDraw.style.display = 'inline-block';
+        }
     }
 
     function enableDrawing() {
@@ -182,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     btnAddFinalPoint.addEventListener('click', addFinalPoint);
     disableDrawing();
 
- 
+
     function rgbArrayToHex(arr) {
         if (!Array.isArray(arr) || arr.length < 3) return null;
         const [r, g, b] = arr.map(n => Math.max(0, Math.min(255, Number(n) || 0)));
@@ -319,12 +377,12 @@ document.addEventListener('DOMContentLoaded', async () => {
  * Muestra un loader de tipo "skeleton" en la lista de rutas.
  * @param {number} count - El número de elementos skeleton a mostrar.
  */
-function showSkeletonLoader(count = 6) {
-    routeItems.innerHTML = ''; // Limpia la lista actual
-    for (let i = 0; i < count; i++) {
-        const li = document.createElement('li');
-        li.className = 'skeleton-item';
-        li.innerHTML = `
+    function showSkeletonLoader(count = 6) {
+        routeItems.innerHTML = ''; // Limpia la lista actual
+        for (let i = 0; i < count; i++) {
+            const li = document.createElement('li');
+            li.className = 'skeleton-item';
+            li.innerHTML = `
             <div class="skeleton-content">
                 <div class="skeleton-info">
                     <div class="skeleton-text title"></div>
@@ -333,9 +391,9 @@ function showSkeletonLoader(count = 6) {
                 <div class="skeleton-color-box"></div>
             </div>
         `;
-        routeItems.appendChild(li);
+            routeItems.appendChild(li);
+        }
     }
-}
     /**
      * Filtra las rutas basándose en una consulta y las renderiza en el panel.
      */
@@ -387,7 +445,7 @@ function showSkeletonLoader(count = 6) {
             const option = document.createElement('option');
             option.value = d.id;
             option.textContent = `${d.name}`;
-            
+
 
             // --- LÍNEA CORREGIDA ---
             // Ahora solo se deshabilita si el chofer está 'En Ruta' (ocupado).
@@ -446,11 +504,15 @@ function showSkeletonLoader(count = 6) {
         const driver = driverId ? drivers.find(d => d.id === driverId) : null;
 
         if (!name) return alert('Pon un nombre a la ruta.');
-        if (tempCoords.length < 2) return alert('La ruta debe tener al menos dos puntos.');
-
-        // --- AÑADE ESTA VALIDACIÓN ---
-        if (!isFinalPointSet) {
-            return alert('Es necesario indicar un punto final con el icono de la bansera');
+        if (isTraceFreeMode) {
+            if (tempCoords.length !== 2) {
+                return alert('Para una ruta sin trazo, debes establecer exactamente un punto de inicio y uno de fin.');
+            }
+        } else {
+            if (tempCoords.length < 2) return alert('La ruta debe tener al menos dos puntos.');
+            if (!isFinalPointSet) {
+                return alert('Es necesario indicar un punto final con el icono de la bandera.');
+            }
         }
         // --- FIN DE LA VALIDACIÓN ---
 
@@ -483,6 +545,37 @@ function showSkeletonLoader(count = 6) {
             console.error(err);
             alert('No se pudo guardar la ruta. Revisa la consola.');
         }
+    });
+
+    traceFreeSwitch.addEventListener('change', (e) => {
+        isTraceFreeMode = e.target.checked;
+
+        // Reinicia el estado de dibujo para evitar confusiones
+        tempCoords = [];
+        drawnItems.clearLayers();
+        disableDrawing();
+        isFinalPointSet = false;
+
+        updateDrawUI(); // Actualiza la interfaz
+    });
+
+    // Modifica el listener del botón "Nueva Ruta"
+    btnNewRoute.addEventListener('click', () => {
+        panelTitle.textContent = 'Nueva ruta';
+        submitButton.textContent = 'Crear ruta';
+        document.getElementById('route-id').value = '';
+        formNewRoute.reset();
+
+        // --- Reinicio del estado del switch ---
+        traceFreeSwitch.checked = false;
+        isTraceFreeMode = false;
+        updateDrawUI();
+        // ------------------------------------
+
+        tempCoords = [];
+        drawnItems.clearLayers();
+        disableDrawing();
+        panel.classList.add('open');
     });
 
     // Mostrar detalle
@@ -527,7 +620,7 @@ function showSkeletonLoader(count = 6) {
         }
         const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca) : 'No asignado';
 
-        
+
 
         routeDetail.innerHTML = `
     <div class="route-card" style="border-left:4px solid ${route.color}; padding:12px;">
@@ -666,8 +759,8 @@ function showSkeletonLoader(count = 6) {
             localStorage.setItem('activeRoute', JSON.stringify(activeRoute));
 
             window.location.href = 'index.html';
-            
-            
+
+
         } catch (err) {
             console.error('startRoute:', err);
             alert('No se pudo iniciar la ruta. Intenta nuevamenteee.');

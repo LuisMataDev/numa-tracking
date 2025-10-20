@@ -427,6 +427,7 @@ textarea:focus {
   cursor: pointer;
   font-size: 15px;
   box-shadow: 0 8px 20px rgba(108, 140, 255, 0.08);
+  color: #f0f0f0;
 
 }
 
