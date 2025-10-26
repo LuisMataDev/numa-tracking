@@ -20,9 +20,7 @@ const io = socketIo(server, {
 // Middlewares
 app.use(express.json());
 
-app.use(express.json());
-
-// 1. INICIALIZA LA SESIÓN. Es lo primero para que todas las rutas la puedan usar.
+// 1. INICIALIZA LA SESIÓN
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
   resave: false,
@@ -33,11 +31,6 @@ app.use(session({
   }
 }));
 
-
-
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
 
 app.post('/api/admin/login', async (req, res) => {
   try {
@@ -72,16 +65,19 @@ app.post('/api/admin/logout', (req, res) => {
 
 
 
-// 3. La página principal (index) está PROTEGIDA
+app.get('/index.html', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// La ruta raíz TAMBIÉN está protegida.
 app.get('/', isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-
+// Servidor de archivos estáticos (CSS, JS, imágenes, login.html)
 app.use(express.static(path.join(__dirname, 'public')));
 
-
-// 4. AHORA SÍ, ponemos el guardia para el RESTO de la API
+// Guardia general para el resto de la API
 app.use('/api', isAuthenticated);
 
 

@@ -1,16 +1,54 @@
-// 1. La página de login es PÚBLICA
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-// También el JS y CSS del login deben ser públicos (express.static ya lo hace)
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('login-form');
+  const errorMsg = document.getElementById('error-msg');
+  const togglePwBtn = document.getElementById('toggle-pw');
+  const pwInput = document.getElementById('route-pass');
 
-// 2. La ruta raíz ('/') ahora está PROTEGIDA
-app.get('/', isAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Sirve tu panel de admin
-});
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault(); // Evita que la página se recargue
+    errorMsg.textContent = ''; // Limpia errores anteriores
 
-// 3. ¡IMPORTANTE! Proteger TODAS tus rutas de API existentes con una sola línea
-app.use('/api', isAuthenticated); 
-// Este middleware se aplicará a todas las rutas que empiecen con /api, 
-// EXCEPTO las que definimos ANTES de esta línea (como /api/admin/login).
-// Por eso, la sección "Rutas de API para Administración" debe ir ANTES de esta línea.
+    const email = form.email.value;
+    const password = form.password.value;
+    const loginButton = document.getElementById('btn-login');
+
+    // Deshabilita el botón para evitar múltiples envíos
+    loginButton.disabled = true;
+    loginButton.textContent = 'Ingresando...';
+
+    try {
+      const response = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (response.ok) {
+        // --- ¡ACCIÓN CLAVE! ---
+        // Si el login fue exitoso, redirige el navegador a la página principal.
+        window.location.href = '/'; 
+      } else {
+        const data = await response.json();
+        errorMsg.textContent = data.error || 'Ocurrió un error inesperado.';
+        // Vuelve a habilitar el botón si hay un error
+        loginButton.disabled = false;
+        loginButton.textContent = 'Entrar';
+      }
+    } catch (err) {
+      errorMsg.textContent = 'No se pudo conectar con el servidor.';
+      console.error('Error de red al intentar iniciar sesión:', err);
+      // Vuelve a habilitar el botón si hay un error de red
+      loginButton.disabled = false;
+      loginButton.textContent = 'Entrar';
+    }
+  });
+
+  // Lógica para mostrar/ocultar la contraseña
+  togglePwBtn.addEventListener('click', () => {
+    const isPassword = pwInput.type === 'password';
+    pwInput.type = isPassword ? 'text' : 'password';
+    togglePwBtn.setAttribute('aria-pressed', String(!isPassword));
+  });
+});
