@@ -39,15 +39,48 @@
             </header>
             <div class="list-header">
                 <button id="btn-new-route"><i class="fa-solid fa-plus"></i> Crear</button>
-                <input id="search-route" type="search" placeholder="Buscar..." aria-label="Buscar route" />
+
+                <div class="search-filter-container">
+                    <div class="search-bar-wrapper">
+                        <input id="search-route" type="search" placeholder="Buscar..." />
+                        <button id="btn-toggle-filters" title="Mostrar filtros">
+                            <i class="fa-solid fa-filter"></i>
+                        </button>
+                    </div>
+
+                    <div id="filter-popup" class="filter-popup hidden">
+                        <h3>Filtros Avanzados</h3>
+
+                        <div class="filter-group">
+                            <label for="status-filter">Estado</label>
+                            <select id="status-filter">
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="vehicle-filter">Vehículo</label>
+                            <select id="vehicle-filter">
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="driver-filter">Chofer</label>
+                            <select id="driver-filter">
+                            </select>
+                        </div>
+
+                        <button id="btn-reset-filters" class="btn-secondary">Limpiar Filtros</button>
+                    </div>
+                </div>
             </div>
             <ul id="route-items"></ul>
         </aside>
-
         <section class="route-detail" id="route-detail">
             <p>Selecciona una ruta para ver detalles.</p>
 
         </section>
+
+
     </div>
 
     <div id="new-route-panel" class="new-route-panel">

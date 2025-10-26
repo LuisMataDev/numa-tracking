@@ -171,14 +171,7 @@ header img{
   width: 100%;
 }
 
-#search-route {
-    flex-grow: 1;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid rgba(15, 23, 36, 0.1);
-    background: var(--bg);
-    width: 10px;
-}
+
 
 .routes-list {
   flex: 0 0 360px;
@@ -219,6 +212,105 @@ header img{
 
 #btn-new-route:active {
   transform: translateY(1px);
+}
+
+.search-filter-container {
+    position: relative; /* Clave para posicionar el popup */
+    width: 100%;
+}
+
+/* Estilo para la barra de búsqueda y su ícono */
+.search-bar-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.search-bar-wrapper input {
+    width: 100%;
+    padding: 8px 40px 8px 15px; /* Dejar espacio a la derecha para el ícono */
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    box-sizing: border-box; /* Asegura que el padding no aumente el ancho total */
+}
+
+/* Botón del ícono de filtro */
+.search-bar-wrapper #btn-toggle-filters {
+    position: absolute;
+    right: 0;
+    top: 0;
+    height: 100%;
+    width: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--accent);
+    font-size: 16px;
+}
+
+.search-bar-wrapper #btn-toggle-filters:hover {
+    color: var(--accent);
+}
+
+/* Panel de filtros (Popup) */
+.filter-popup {
+    position: absolute;
+    top: calc(100% + 5px); /* Justo debajo de la barra de búsqueda */
+    right: 0;
+    width: 280px;
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 15px;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Clase para ocultar/mostrar el popup */
+.filter-popup.hidden {
+    display: none;
+}
+
+.filter-popup h3 {
+    margin-top: 0;
+    text-align: center;
+    font-size: 16px;
+    color: #333;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+.filter-group select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.filter-popup .btn-secondary {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.filter-popup .btn-secondary:hover {
+    background-color: #5a6268;
 }
 
 #route-items {

@@ -112,6 +112,7 @@ const routeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   color: { type: String, default: '#3b82f6' },
   coords: { type: [[Number]] },
+  isTraceFree: { type: Boolean, default: false },
   puntos: { type: Number },
   estado: {
     type: String,
@@ -359,26 +360,23 @@ app.post('/api/routes', async (req, res) => {
     const rawColor = req.body.color || req.body.colorArray || req.body.color_rgb;
     const vehicle = req.body.vehicle;
     const driver = req.body.driver || null;
+    // --- 1. Recibe el nuevo campo ---
+    const isTraceFree = req.body.isTraceFree || false;
 
     if (!name || !coords || !Array.isArray(coords) || coords.length < 2) {
       return res.status(400).json({ error: 'Datos de ruta inválidos: se requiere nombre y al menos 2 coordenadas' });
     }
 
     let color = '#3b82f6';
-    if (Array.isArray(rawColor)) {
-      const hex = rgbArrayToHex(rawColor);
-      if (hex) color = hex;
-    } else if (typeof rawColor === 'string' && rawColor.trim()) {
-      color = rawColor;
-    }
+    if (Array.isArray(rawColor)) { /* ... tu lógica de color ... */ }
 
-    // Generar contraseña única si no viene en el body
     const password = (req.body.password && String(req.body.password).trim()) ? String(req.body.password).trim() : generatePassword(8);
 
-    const newRoute = await Route.create({ name, color, coords, vehicle, driver, password });
+    // --- 2. Añade el campo al crear el documento ---
+    const newRoute = await Route.create({ name, color, coords, vehicle, driver, password, isTraceFree });
+
     io.emit('routesUpdated', newRoute.toJSON());
 
-    // Si la ruta tiene driver -> recalcular estado
     if (driver && driver.id) {
       await computeAndSetDriverStatus(driver.id);
     }
@@ -393,10 +391,13 @@ app.post('/api/routes', async (req, res) => {
 // Actualizar una ruta
 app.put('/api/routes/:id', async (req, res) => {
   try {
-    const { name, color, coords, vehicle, driver } = req.body;
+    // --- 1. Recibe el nuevo campo 'isTraceFree' ---
+    const { name, color, coords, vehicle, driver, isTraceFree } = req.body;
 
-    // Construir objeto de actualización — solo incluir password si viene explicitamente
-    const update = { name, color, coords, vehicle, driver };
+    // Construir objeto de actualización
+    // --- 2. Añádelo al objeto de actualización ---
+    const update = { name, color, coords, vehicle, driver, isTraceFree };
+
     if (req.body.password !== undefined) {
       update.password = String(req.body.password);
     }
@@ -411,7 +412,6 @@ app.put('/api/routes/:id', async (req, res) => {
     }
     io.emit('routesUpdated', updatedRoute.toJSON());
 
-    // Si la ruta tiene driver -> recalcular estado
     if (updatedRoute.driver && updatedRoute.driver.id) {
       await computeAndSetDriverStatus(updatedRoute.driver.id);
     }

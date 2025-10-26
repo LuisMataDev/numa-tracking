@@ -57,22 +57,29 @@ async function initMap() {
             driverMarkers[driverId].setLatLng(coordsLatLng);
         }
 
-        if (routeId && routeLayers[routeId]) {
-            const routeInfo = routeLayers[routeId];
+        const routeInfo = routeId ? routeLayers[routeId] : null;
+        if (routeInfo && routeInfo.progressLine && !routeInfo.route.isTraceFree) {
             const routeCoords = routeInfo.route.coords || [];
             let currentIndex = -1;
+            // ... (el resto de tu lógica `for` para calcular el progreso no cambia) ...
             for (let i = 0; i < routeCoords.length; i++) {
                 const pt = routeCoords[i];
-                const ptLatLng = Array.isArray(pt) ? L.latLng(Number(pt[0]), Number(pt[1])) : (pt && pt.lat !== undefined ? L.latLng(Number(pt.lat), Number(pt.lng)) : L.latLng(pt));
-                if (map.distance(coordsLatLng, ptLatLng) <= TOLERANCE) currentIndex = i;
+                const ptLatLng = L.latLng(Number(pt[0]), Number(pt[1]));
+                if (map.distance(coordsLatLng, ptLatLng) <= TOLERANCE) {
+                    currentIndex = i;
+                }
             }
-            if (currentIndex > routeInfo.maxProgressIndex) routeInfo.maxProgressIndex = currentIndex;
+            if (currentIndex > routeInfo.maxProgressIndex) {
+                routeInfo.maxProgressIndex = currentIndex;
+            }
             if (routeInfo.maxProgressIndex !== -1) {
                 routeInfo.progressLine.setLatLngs(routeCoords.slice(0, routeInfo.maxProgressIndex + 1));
             }
         }
 
-        if (driverId) lastKnownLocations[driverId] = { lat: data.lat, lng: data.lng, timestamp: data.timestamp || Date.now() };
+        if (driverId) {
+            lastKnownLocations[driverId] = { lat: data.lat, lng: data.lng, timestamp: data.timestamp || Date.now() };
+        }
     });
 
     socket.on('routeStatusChanged', updateAll);
@@ -221,42 +228,74 @@ async function updateKPIs() {
 
 async function fetchAndDrawRoutes() {
     try {
+        // Limpia las capas de rutas existentes del mapa
         for (const id in routeLayers) {
-            if (routeLayers[id].greyLine) map.removeLayer(routeLayers[id].greyLine);
-            if (routeLayers[id].progressLine) map.removeLayer(routeLayers[id].progressLine);
+            if (routeLayers[id].layerGroup) {
+                map.removeLayer(routeLayers[id].layerGroup);
+            }
         }
         routeLayers = {};
+
         const res = await fetch('/api/routes');
         if (!res.ok) throw new Error('Error al cargar rutas');
+
         const allRoutes = await res.json();
-        routes = allRoutes;
-        const inProgressRoutes = allRoutes.filter(r => r.estado === 'en curso' && r.coords && r.coords.length > 1);
+        routes = allRoutes; // Actualiza el estado global de rutas
+
+        const inProgressRoutes = allRoutes.filter(r => r.estado === 'en curso' && r.coords && r.coords.length > 0);
+
         if (inProgressRoutes.length === 0) {
             document.getElementById('status').textContent = 'No hay rutas en curso.';
             updateInfoPanel({});
             return;
         }
+
         document.getElementById('status').textContent = `Mostrando ${inProgressRoutes.length} rutas en curso.`;
+
         let bounds = new L.LatLngBounds();
+
         inProgressRoutes.forEach(route => {
-            const normalizedCoords = (route.coords || []).map(pt => {
-                if (Array.isArray(pt)) {
-                    const a = Number(pt[0]), b = Number(pt[1]);
-                    return (Math.abs(a) <= 90 && Math.abs(b) <= 180) ? [a, b] : [b, a];
-                } else if (pt && typeof pt === 'object') {
-                    if (pt.lat !== undefined && pt.lng !== undefined) return [Number(pt.lat), Number(pt.lng)];
-                    if (pt.latitude !== undefined && pt.longitude !== undefined) return [Number(pt.latitude), Number(pt.longitude)];
-                }
-                return pt;
-            });
-            const greyLine = L.polyline(normalizedCoords, { color: '#616142ff' }).addTo(map);
+            const layerGroup = new L.FeatureGroup().addTo(map); // Un grupo para todos los elementos de esta ruta
             const routeColor = route.color || '#f357a1';
-            const progressLine = L.polyline([], { color: routeColor, weight: 6 }).addTo(map);
-            greyLine.on('click', () => { activeRouteId = route.id; updateInfoPanel(route); });
-            routeLayers[route.id] = { route: { ...route, coords: normalizedCoords }, greyLine, progressLine, maxProgressIndex: -1 };
-            bounds.extend(greyLine.getBounds());
+
+            // --- CAMBIO CLAVE: Lógica de dibujo condicional ---
+            if (route.isTraceFree) {
+                // MODO SIN TRAZO: Dibuja solo inicio y fin
+                const startPoint = route.coords[0];
+                const endPoint = route.coords[route.coords.length - 1];
+
+                L.marker(startPoint, {
+                    icon: L.divIcon({ className: 'start-marker-icon', html: '<i class="fa-solid fa-location-dot" style="color:#2ecc71; font-size: 24px;"></i>' })
+                }).addTo(layerGroup);
+
+                L.marker(endPoint, {
+                    icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>' })
+                }).addTo(layerGroup);
+
+                // Guardamos la ruta sin líneas
+                routeLayers[route.id] = { route, layerGroup, maxProgressIndex: -1 };
+
+            } else {
+                // MODO CON TRAZO: Dibuja la línea completa y la de progreso
+                const greyLine = L.polyline(route.coords, { color: '#616142ff' }).addTo(layerGroup);
+                const progressLine = L.polyline([], { color: routeColor, weight: 6 }).addTo(layerGroup);
+
+                greyLine.on('click', () => {
+                    activeRouteId = route.id;
+                    updateInfoPanel(route);
+                });
+
+                // Guardamos la ruta con sus líneas
+                routeLayers[route.id] = { route, layerGroup, greyLine, progressLine, maxProgressIndex: -1 };
+            }
+
+            bounds.extend(layerGroup.getBounds());
         });
-        if (inProgressRoutes.length > 0) map.fitBounds(bounds, { padding: [20, 20] });
+
+        if (inProgressRoutes.length > 0 && bounds.isValid()) {
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+
     } catch (err) {
         console.error('Error al dibujar rutas en curso:', err);
         document.getElementById('status').textContent = 'Error al cargar las rutas en curso.';
@@ -266,6 +305,17 @@ async function fetchAndDrawRoutes() {
 function updateInfoPanel(route) {
     document.getElementById('route-name-display').textContent = route.name || 'Sin asignar';
     document.getElementById('route-id-display').textContent = route.id || 'Sin asignar';
+
+    const routeTypeDisplay = document.createElement('p'); // Creamos un elemento para esto
+    routeTypeDisplay.innerHTML = `<strong>Tipo:</strong> ${route.isTraceFree ? 'Sin Trazo (Libre)' : 'Con Trazo Definido'}`;
+    // Insertamos el tipo de ruta después del ID
+    const routeIdEl = document.getElementById('route-id-display');
+    if (routeIdEl.nextSibling) {
+        routeIdEl.parentNode.insertBefore(routeTypeDisplay, routeIdEl.nextSibling);
+    } else {
+        routeIdEl.parentNode.appendChild(routeTypeDisplay);
+    }
+
     let vehicle = { alias: 'Sin asignar', marca: '', id: '' };
     let driver = { name: 'Sin asignar', id: '' };
     if (route.driver) {

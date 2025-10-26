@@ -39,9 +39,89 @@ document.addEventListener('DOMContentLoaded', async () => {
     const traceFreeSwitch = document.getElementById('trace-free-switch');
     const drawHelperText = document.getElementById('draw-helper-text');
 
+    const btnToggleFilters = document.getElementById('btn-toggle-filters');
+    const filterPopup = document.getElementById('filter-popup');
+    const statusFilter = document.getElementById('status-filter');
+    const vehicleFilter = document.getElementById('vehicle-filter');
+    const driverFilter = document.getElementById('driver-filter');
+    const btnResetFilters = document.getElementById('btn-reset-filters');
+
     let isTraceFreeMode = false;
 
     const defaultCoords = [19.7677724, -104.3686507]; // Ubicación por si las moscas
+
+
+    btnToggleFilters.addEventListener('click', () => {
+        filterPopup.classList.toggle('hidden');
+    });
+
+    // Opcional: Cerrar el popup si se hace clic fuera
+    document.addEventListener('click', (e) => {
+        if (!filterPopup.classList.contains('hidden') && !e.target.closest('.search-filter-container')) {
+            filterPopup.classList.add('hidden');
+        }
+    });
+
+    // --- AÑADIR LISTENERS A LOS NUEVOS FILTROS ---
+    statusFilter.addEventListener('change', filterAndRenderRoutes);
+    vehicleFilter.addEventListener('change', filterAndRenderRoutes);
+    driverFilter.addEventListener('change', filterAndRenderRoutes);
+    btnResetFilters.addEventListener('click', () => {
+        statusFilter.value = 'pendiente';
+        vehicleFilter.value = '';
+        driverFilter.value = '';
+        searchInput.value = '';
+        filterAndRenderRoutes();
+        filterPopup.classList.add('hidden');
+    });
+    
+    // El listener del searchInput sigue igual
+    searchInput.addEventListener('input', filterAndRenderRoutes);
+
+   function populateStatusFilter() {
+    const statuses = {
+        '': 'Todos los estados',
+        'pendiente': 'Pendiente',
+        'lista para iniciar': 'Lista para Iniciar',
+        'en curso': 'En Curso',
+        'finalizada': 'Finalizada',
+        'cancelada': 'Cancelada'
+    };
+
+    // Referencia al elemento select del panel de filtros
+    const statusFilter = document.getElementById('status-filter');
+    
+    statusFilter.innerHTML = ''; // Limpiar opciones por si acaso
+    for (const value in statuses) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = statuses[value];
+        statusFilter.appendChild(option);
+    }
+
+    // --- CAMBIO CLAVE: Establecer "Pendiente" como valor por defecto ---
+    statusFilter.value = 'pendiente';
+}
+
+function populateVehicleFilter() {
+    vehicleFilter.innerHTML = '<option value="">-- Todos --</option>';
+    vehicles.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v.id;
+        option.textContent = `${v.alias || v.marca} (${v.id})`;
+        vehicleFilter.appendChild(option);
+    });
+}
+
+function populateDriverFilter() {
+    driverFilter.innerHTML = '<option value="">-- Todos --</option>';
+    drivers.forEach(d => {
+        const option = document.createElement('option');
+        option.value = d.id;
+        option.textContent = d.name;
+        driverFilter.appendChild(option);
+    });
+}
 
     // Inicializa el mapa con la vista por defecto. Se moverá si la geolocalización tiene éxito.
     const drawMap = L.map('draw-map').setView(defaultCoords, 13);
@@ -369,7 +449,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             filterAndRenderRoutes('');
             renderVehicleOptions();
-            renderDriverOptions(); // --- poblar select de choferes
+            renderDriverOptions(); // --- poblar select de 
+            
+            // --- LLAMAR A LAS FUNCIONES DE POBLADO ---
+           populateStatusFilter();
+           populateVehicleFilter();
+           populateDriverFilter();
+
+            filterAndRenderRoutes();
+
         } catch (err) {
             console.error('fetchData:', err);
             routeItems.innerHTML = '<li class="empty">No se pudieron cargar los datos.</li>';
@@ -400,30 +488,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     /**
      * Filtra las rutas basándose en una consulta y las renderiza en el panel.
      */
-    function filterAndRenderRoutes(query) {
-        routeItems.innerHTML = '';
-        const lowerCaseQuery = query.toLowerCase();
+   function filterAndRenderRoutes() {
+    routeItems.innerHTML = '';
 
-        const filteredRoutes = routes.filter(route => {
-            const vehicleInfo = route.vehicle && vehicles.find(v => v.id === route.vehicle.id);
-            const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca || '').toLowerCase() : '';
-            const driverName = route.driver ? (route.driver.name || '').toLowerCase() : '';
+    // 1. Obtener los valores de todos los filtros activos
+    const query = searchInput.value.toLowerCase();
+    const selectedStatus = document.getElementById('status-filter').value;
+    const selectedVehicleId = document.getElementById('vehicle-filter').value;
+    const selectedDriverId = document.getElementById('driver-filter').value;
 
-            return (
-                (route.name && route.name.toLowerCase().includes(lowerCaseQuery)) ||
-                (route.id && route.id.toLowerCase().includes(lowerCaseQuery)) ||
-                (route.estado && route.estado.toLowerCase().includes(lowerCaseQuery)) ||
-                (vehicleAlias.includes(lowerCaseQuery)) ||
-                (driverName.includes(lowerCaseQuery))
-            );
-        });
+    const filteredRoutes = routes.filter(route => {
+        // 2. Comprobar cada filtro de tipo <select>
+        // La ruta debe coincidir con todos los filtros seleccionados.
+        // Si un filtro está vacío ("-- Todos --"), se considera una coincidencia.
+        const statusMatch = !selectedStatus || route.estado === selectedStatus;
+        const vehicleMatch = !selectedVehicleId || (route.vehicle && route.vehicle.id === selectedVehicleId);
+        const driverMatch = !selectedDriverId || (route.driver && route.driver.id === selectedDriverId);
 
-        if (filteredRoutes.length === 0) {
-            routeItems.innerHTML = '<li class="empty">No se encontraron rutas que coincidan.</li>';
-        } else {
-            filteredRoutes.forEach(addListItem);
+        // Si no cumple con alguno de los filtros de selección, la descartamos inmediatamente.
+        if (!statusMatch || !vehicleMatch || !driverMatch) {
+            return false;
         }
+
+        // 3. Si pasó los filtros de selección, ahora comprobamos el filtro de texto.
+        // Si no hay texto en la barra de búsqueda, la ruta es válida.
+        if (query === '') {
+            return true;
+        }
+
+        // Si hay texto, aplicamos la misma lógica de búsqueda que ya tenías.
+        const vehicleInfo = route.vehicle && vehicles.find(v => v.id === route.vehicle.id);
+        const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca || '').toLowerCase() : '';
+        const driverName = route.driver ? (route.driver.name || '').toLowerCase() : '';
+
+        return (
+            (route.name && route.name.toLowerCase().includes(query)) ||
+            (route.id && route.id.toLowerCase().includes(query)) ||
+            (route.estado && route.estado.toLowerCase().includes(query)) ||
+            (vehicleAlias.includes(query)) ||
+            (driverName.includes(query))
+        );
+    });
+
+    // 4. Renderizar el resultado
+    if (filteredRoutes.length === 0) {
+        // Mensaje actualizado para reflejar los nuevos filtros
+        routeItems.innerHTML = '<li class="empty">No se encontraron rutas con los filtros aplicados.</li>';
+    } else {
+        filteredRoutes.forEach(addListItem);
     }
+}
 
     function renderVehicleOptions() {
         routeVehicleSelect.innerHTML = '<option value="">-- Sin asignar --</option>';
@@ -527,7 +641,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             color,
             coords: tempCoords,
             vehicle: vehicle ? { id: vehicle.id, alias: vehicle.alias, marca: vehicle.marca } : null,
-            driver: driver ? { id: driver.id, name: driver.name } : null // --- incluir driver aquí
+            driver: driver ? { id: driver.id, name: driver.name } : null, // --- incluir driver aquí
+            isTraceFree: document.getElementById('trace-free-switch').checked
         };
 
         try {
@@ -700,6 +815,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else if (routeDriverSelect) {
             routeDriverSelect.value = "";
         }
+
+        traceFreeSwitch.checked = route.isTraceFree || false;
+        isTraceFreeMode = route.isTraceFree || false;
+        updateDrawUI(); // Actualiza la UI para mostrar los botones correctos
 
         // Cargar puntos en el mapa
         tempCoords = route.coords || [];

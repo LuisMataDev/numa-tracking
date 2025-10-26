@@ -16,6 +16,7 @@
     const btnFinishRoute = document.getElementById('btn-finish-route');
     const fab = document.getElementById('fab-mypos');
     const toast = document.getElementById('toast');
+    let isAutoPanActive = true; // <-- AÑADE ESTA LÍNEA
 
     // --- Estado de la App ---
     let currentRoute = null;
@@ -83,13 +84,52 @@
     updateStatusUI(currentRoute.estado);
 
     function initMap() {
-        if (!currentRoute.coords || currentRoute.coords.length === 0) return;
-        map = L.map('map').setView(currentRoute.coords[0], 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-        routeLayers.greyLine = L.polyline(currentRoute.coords, { color: '#5f5959ff', weight: 5, opacity: 0.8 }).addTo(map);
-        progressSegments.addTo(map);
-        map.fitBounds(routeLayers.greyLine.getBounds(), { padding: [50, 50] });
+    if (!currentRoute.coords || currentRoute.coords.length === 0) {
+        showToast("La ruta no tiene coordenadas.", 3000);
+        return;
     }
+
+    if (map) {
+    map.on('dragstart', () => {
+        isAutoPanActive = false;
+        if (fab) fab.classList.add('inactive'); // Indicador visual
+        showToast("Auto-enfoque desactivado. Presiona 📍 para reactivar.", 2500);
+    });
+}
+
+    map = L.map('map').setView(currentRoute.coords[0], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Un grupo de capas para manejar los límites del mapa fácilmente
+    const routeBoundsGroup = L.featureGroup().addTo(map);
+
+    // --- CAMBIO CLAVE: Lógica de dibujo condicional ---
+    if (currentRoute.isTraceFree) {
+        // MODO SIN TRAZO: Dibuja solo inicio y fin
+        const startPoint = currentRoute.coords[0];
+        const endPoint = currentRoute.coords[currentRoute.coords.length - 1];
+
+        L.marker(startPoint, {
+            icon: L.divIcon({ className: 'start-marker-icon', html: '<i class="fa-solid fa-location-dot" style="color:#2ecc71; font-size: 32px;"></i>' })
+        }).addTo(routeBoundsGroup);
+
+        L.marker(endPoint, {
+            icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 32px;"></i>' })
+        }).addTo(routeBoundsGroup);
+
+    } else {
+        // MODO CON TRAZO: Dibuja la línea gris de la ruta completa
+        routeLayers.greyLine = L.polyline(currentRoute.coords, { color: '#5f5959ff', weight: 5, opacity: 0.8 }).addTo(routeBoundsGroup);
+    }
+    // --- FIN DEL CAMBIO ---
+
+    progressSegments.addTo(map); // La capa para el progreso siempre se añade
+    
+    // Ajusta el zoom para que se vea toda la ruta o los marcadores
+    if (routeBoundsGroup.getLayers().length > 0) {
+        map.fitBounds(routeBoundsGroup.getBounds(), { padding: [50, 50] });
+    }
+}
 
     // --- Lógica de Sockets ---
     socket.on('connect', () => {
@@ -126,16 +166,28 @@
     });
 
     function startTracking() {
-        if (!('geolocation' in navigator)) { return; }
-        watchId = navigator.geolocation.watchPosition((pos) => {
-            const { latitude: lat, longitude: lng, accuracy } = pos.coords;
-            const currentPosition = [lat, lng];
+    if (!('geolocation' in navigator)) { return; }
 
-            if (coordsEl) coordsEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(accuracy)} m)`;
-            if (map) {
-                if (!driverMarker) driverMarker = L.marker(currentPosition).addTo(map);
-                else driverMarker.setLatLng(currentPosition);
+    watchId = navigator.geolocation.watchPosition((pos) => {
+        const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+        const currentPosition = [lat, lng];
+
+        if (coordsEl) coordsEl.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(accuracy)} m)`;
+        
+        if (map) {
+            if (!driverMarker) {
+                // Crea el marcador la primera vez
+                driverMarker = L.marker(currentPosition).addTo(map);
+            } else {
+                // Simplemente actualiza la posición en las siguientes
+                driverMarker.setLatLng(currentPosition);
             }
+
+            // --- CAMBIO CLAVE: Auto-enfoque condicional ---
+            if (isAutoPanActive) {
+                map.panTo(currentPosition);
+            }
+        }
 
             let minDistance = Infinity;
             if (map && currentRoute.coords) {
@@ -168,7 +220,16 @@
 
     if (btnCenter) btnCenter.addEventListener('click', () => driverMarker && map.panTo(driverMarker.getLatLng()));
     if (btnZoom) btnZoom.addEventListener('click', () => routeLayers.greyLine && map.fitBounds(routeLayers.greyLine.getBounds(), { padding: [50, 50] }));
-    if (fab) fab.addEventListener('click', () => driverMarker && map.panTo(driverMarker.getLatLng()));
+    if (fab) {
+    fab.addEventListener('click', () => {
+        if (driverMarker) {
+            map.panTo(driverMarker.getLatLng());
+            isAutoPanActive = true; // Reactiva el auto-enfoque
+            fab.classList.remove('inactive'); // Quita el indicador visual
+            showToast("Auto-enfoque reactivado.", 1500);
+        }
+    });
+}
     if (btnFinishRoute) {
         btnFinishRoute.addEventListener('click', () => {
             if (confirm('¿Estás seguro de que quieres solicitar la finalización de esta ruta?')) {

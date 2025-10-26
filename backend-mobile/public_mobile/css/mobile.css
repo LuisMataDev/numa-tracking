@@ -358,6 +358,10 @@ body {
   cursor: not-allowed;
 }
 
+.fab.inactive {
+    background-color: #7f8c8d; /* Un color gris para indicar que está inactivo */
+}
+
 /* Ajustes responsivos (tablet y pantallas más anchas) */
 @media (min-width: 700px) {
   .sheet {
