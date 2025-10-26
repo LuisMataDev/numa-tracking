@@ -115,14 +115,29 @@ function generatePassword(len = 8) {
 }
 
 function isAuthenticated(req, res, next) {
-  if (req.session.adminId) {
-    return next(); // Si hay sesión, adelante.
+  // RUTAS PÚBLICAS que NO requieren sesión (ajusta según tus endpoints)
+  const publicApiPatterns = [
+    /^\/api\/admin\/login/,
+    /^\/api\/admin\/logout/,
+    /^\/api\/routes\/login/,            // mobile: login por password de ruta
+    /^\/api\/drivers\/[^/]+\/login/     // mobile: POST /api/drivers/:id/login
+  ];
+
+  // Si la URL coincide con alguna pública, permitir pasar
+  if (req.originalUrl && publicApiPatterns.some(rx => rx.test(req.originalUrl))) {
+    return next();
   }
-  // Si no hay sesión, y es una petición de API, devuelve error
-  if (req.originalUrl.startsWith('/api/')) {
+
+  // Si hay sesión de admin, permitir
+  if (req.session && req.session.adminId) {
+    return next();
+  }
+
+  // Peticiones API => 401; web => redirect a login
+  if (req.originalUrl && req.originalUrl.startsWith('/api/')) {
+    console.warn('[isAuthenticated] 401', req.method, req.originalUrl, 'hasSession=', !!req.session?.adminId);
     return res.status(401).json({ error: 'No autorizado. Por favor, inicie sesión.' });
   }
-  // Si no, redirige a la página de login
   res.redirect('/login.html');
 }
 // --- Schemas de la base de datos ---

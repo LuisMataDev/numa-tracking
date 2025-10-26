@@ -698,100 +698,133 @@ function populateDriverFilter() {
 
     // Mostrar detalle
     async function showRouteDetail(id) {
-        document.querySelectorAll('#route-items li')
-            .forEach(li => li.classList.toggle('active', li.dataset.id === id));
+    // 1. Resalta el elemento activo en la lista
+    document.querySelectorAll('#route-items li')
+        .forEach(li => li.classList.toggle('active', li.dataset.id === id));
 
-        let route = routes.find(r => r.id === id);
-        if (!route) return;
+    let route = routes.find(r => r.id === id);
+    if (!route) return;
 
-        if (!route.coords || route.coords.length < 2) {
-            try {
-                const res = await fetch(`/api/routes/${id}`);
-                if (res.ok) {
-                    const full = await res.json();
-                    const normalized = normalizeRoute(full);
-                    const idx = routes.findIndex(r => r.id === id);
-                    if (idx >= 0) routes[idx] = normalized;
-                    route = normalized;
-                }
-            } catch (err) {
-                console.warn('No se pudo obtener detalle de ruta:', err);
+    // 2. Si faltan detalles (coordenadas), búscalos en el servidor
+    if (!route.coords) {
+        try {
+            const res = await fetch(`/api/routes/${id}`);
+            if (res.ok) {
+                const fullRouteData = await res.json();
+                const normalized = normalizeRoute(fullRouteData); // Asumo que tienes esta función
+                const idx = routes.findIndex(r => r.id === id);
+                if (idx !== -1) routes[idx] = normalized;
+                route = normalized;
             }
+        } catch (err) {
+            console.warn('No se pudo obtener el detalle completo de la ruta:', err);
         }
+    }
+    
+    // 3. Prepara las variables para la plantilla
+    const vehicleInfo = route.vehicle ? vehicles.find(v => v.id === route.vehicle.id) : null;
+    const driverData = route.driver ? drivers.find(d => d.id === route.driver.id) : null;
+    const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca) : 'No asignado';
+    const driverName = route.driver ? route.driver.name : 'No asignado';
+    let driverStatusHtml = '';
+    if (driverData) {
+        const { text, color } = driverStatusInfo[driverData.status] || defaultStatusInfo;
+        driverStatusHtml = `<span style="color: ${color}; margin-left: 8px;">(${text})</span>`;
+    }
 
-        // Render detalle (AHORA mostramos chofer desde route.driver)
-        // ... busca estas líneas ...
-        const vehicleInfo = route.vehicle ? vehicles.find(v => v.id === route.vehicle.id) : null;
-        // --- REEMPLAZA LA LÓGICA DEL CHOFER POR ESTO ---
-        let driverName = 'No asignado';
-        let driverStatusHtml = '';
+    // --- LÓGICA CENTRALIZADA DE ESTADOS Y COLORES ---
+    const routeStatus = route.estado;
+    const canStart = route.coords && route.coords.length >= 2;
 
-        if (route.driver && route.driver.id) {
-            const driverData = drivers.find(d => d.id === route.driver.id);
-            driverName = route.driver.name || 'No asignado';
+    // Reglas de negocio
+    const isEditable = routeStatus === 'pendiente'; // Solo se puede editar o eliminar en 'pendiente'
+    const isCancelable = routeStatus === 'en curso'; // Solo se puede cancelar en 'en curso'
+    const isActionable = ['pendiente', 'lista para iniciar', 'en curso'].includes(routeStatus);
 
-            if (driverData) {
-                const status = driverData.status || 'inactive';
-                const { text, color } = driverStatusInfo[status] || defaultStatusInfo;
-                driverStatusHtml = `<span style="color: ${color}; margin-left: 8px;">(${text})</span>`;
-            }
-        }
-        const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca) : 'No asignado';
+    // Colores base
+    const blue = '#6c8cff';
+    const green = '#2ecc71';
+    const red = '#e74c3c';
+    const grey = '#95a5a6';
 
+    // Determina colores y estados de los botones
+    const cardBorderColor = routeStatus === 'cancelada' ? red : route.color;
+    const editDeleteButtonColor = isEditable ? blue : grey;
 
+    let actionButtonColor = grey;
+    let actionButtonText = routeStatus.charAt(0).toUpperCase() + routeStatus.slice(1);
+    let actionButtonDisabled = true;
 
-        routeDetail.innerHTML = `
-    <div class="route-card" style="border-left:4px solid ${route.color}; padding:12px;">
+    if (routeStatus === 'pendiente') {
+        actionButtonColor = blue;
+        actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
+        actionButtonDisabled = !canStart;
+    } else if (routeStatus === 'lista para iniciar') {
+        actionButtonColor = green;
+        actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
+        actionButtonDisabled = !canStart;
+    } else if (isCancelable) {
+        actionButtonColor = red;
+        actionButtonText = 'Cancelar Ruta';
+        actionButtonDisabled = false;
+    }
+    
+    // 4. Construye el HTML final (se eliminó el párrafo de estado duplicado)
+    routeDetail.innerHTML = `
+    <div class="route-card" style="border-left: 4px solid ${cardBorderColor}; padding: 12px;">
         <h3>${route.name}</h3>
         <p><strong>Estado:</strong> 
-            <span style="font-weight: bold; color: ${route.estado === 'lista para iniciar' ? '#3498db' : 'inherit'}">
-             ${route.estado}
-            </span>
+            <span style="font-weight: bold; text-transform: capitalize;">${route.estado}</span>
         </p>
         <p><strong>Puntos:</strong> ${route.puntos ?? (route.coords ? route.coords.length : 0)}</p>
-        <p><strong>Estado:</strong> ${route.estado}</p>
         <p><strong>Vehículo:</strong> ${vehicleAlias}</p>
         <p><strong>Chofer:</strong> ${driverName}${driverStatusHtml}</p>
-        <p><strong>Contraseña:</strong> <span id="route-password">${route.password ? route.password : 'No generada'}</span>
-           ${route.password ? `<button id="btn-copy-password" style="background: #6c8cff; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700;"">Copiar</button>
-            <button id="btn-send-password" style="background: #6c8cff; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700;"">Enviar</button>` : ''}
-        </p>
-        <p><strong>Color:</strong>
-            <span style="
-                display:inline-block;
-                width:20px;height:20px;background:${route.color};
-                border-radius:4px;vertical-align:middle;"></span>
+        <p><strong>Contraseña:</strong> <span id="route-password">${route.password || 'No generada'}</span>
+            ${route.password ? `
+                <button id="btn-copy-password" style="background: ${blue}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;">Copiar</button>
+            ` : ''}
         </p>
         <div style="margin-top:12px; display: flex; gap: 8px;">
-            <button style="background: #6c8cff; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700;" id="btn-edit-route" class="btn-edit">Editar</button>
-            <button style="background: #6c8cff; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700;" id="btn-delete-route" class="btn-delete">Eliminar</button>
-            <button style="background: #6c8cff; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-weight: 700;" id="start-route" data-id="${route.id}" ${(!route.coords || route.coords.length < 2) ? 'disabled' : ''}>
-                ${(!route.coords || route.coords.length < 2) ? 'Sin coordenadas' : 'Iniciar ruta'}
+            <button id="btn-edit-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
+                Editar
+            </button>
+            <button id="btn-delete-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
+                Eliminar
+            </button>
+            <button id="start-cancel-route" style="background: ${actionButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${actionButtonDisabled ? 'disabled' : ''}>
+                ${actionButtonText}
             </button>
         </div>
-    </div>
-`;
-        const copyBtn = document.getElementById('btn-copy-password');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', () => {
-                const pwd = document.getElementById('route-password')?.textContent || '';
-                if (!pwd) return;
-                navigator.clipboard?.writeText(pwd).then(() => {
-                    copyBtn.textContent = 'Copiado';
-                    setTimeout(() => copyBtn.textContent = 'Copiar', 1200);
-                }).catch(() => {
-                    alert('No se pudo copiar al portapapeles. Contraseña: ' + pwd);
-                });
-            });
-        }
-        document.getElementById('btn-edit-route').addEventListener('click', () => {
-            editRoute(route.id);
-        });
-        document.getElementById('btn-delete-route').addEventListener('click', () => {
-            deleteRoute(route.id);
-        });
-        document.getElementById('start-route').addEventListener('click', () => startRoute(route.id));
+    </div>`;
+
+    // 5. Asigna los event listeners de forma segura para evitar duplicados
+    if (isEditable) {
+        document.getElementById('btn-edit-route').addEventListener('click', () => editRoute(route.id));
+        document.getElementById('btn-delete-route').addEventListener('click', () => deleteRoute(route.id));
     }
+    
+    if (isActionable) {
+        document.getElementById('start-cancel-route').addEventListener('click', () => {
+            if (route.estado === 'en curso') {
+                cancelRoute(route.id);
+            } else {
+                startRoute(route.id);
+            }
+        });
+    }
+
+    const copyBtn = document.getElementById('btn-copy-password');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const pwd = document.getElementById('route-password')?.textContent || '';
+            if (!pwd || pwd === 'No generada') return;
+            navigator.clipboard.writeText(pwd).then(() => {
+                copyBtn.textContent = 'Copiado';
+                setTimeout(() => copyBtn.textContent = 'Copiar', 1200);
+            });
+        });
+    }
+}
 
     // Editar ruta
     async function editRoute(id) {
