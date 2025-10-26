@@ -21,6 +21,49 @@ const io = socketIo(server, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Se requiere email y contraseña.' });
+    }
+    const admin = await SuperAdmin.findOne({ email: email.toLowerCase() });
+    if (!admin) {
+      return res.status(401).json({ error: 'Credenciales inválidas.' });
+    }
+    const isMatch = await admin.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Credenciales inválidas.' });
+    }
+    req.session.adminId = admin._id; // ¡Éxito! Creamos la sesión.
+    res.status(200).json({ message: 'Login exitoso' });
+  } catch (err) {
+    console.error('Error en /api/admin/login', err);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+app.post('/api/admin/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ error: 'No se pudo cerrar la sesión.' });
+    }
+    res.status(200).json({ message: 'Logout exitoso.' });
+  });
+});
+
+// 3. La página principal (index) está PROTEGIDA
+app.get('/', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 4. AHORA SÍ, ponemos el guardia para el RESTO de la API
+app.use('/api', isAuthenticated);
+
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
   resave: false,
@@ -214,21 +257,7 @@ async function computeAndSetDriverStatus(driverId) {
 }
 
 // 1. La página de login es PÚBLICA
-app.get('/login.html', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-// También el JS y CSS del login deben ser públicos (express.static ya lo hace)
 
-// 2. La ruta raíz ('/') ahora está PROTEGIDA
-app.get('/', isAuthenticated, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Sirve tu panel de admin
-});
-
-// 3. ¡IMPORTANTE! Proteger TODAS tus rutas de API existentes con una sola línea
-app.use('/api', isAuthenticated); 
-// Este middleware se aplicará a todas las rutas que empiecen con /api, 
-// EXCEPTO las que definimos ANTES de esta línea (como /api/admin/login).
-// Por eso, la sección "Rutas de API para Administración" debe ir ANTES de esta línea.
 
 // --- Rutas de la API para Choferes ---
 
