@@ -2,17 +2,20 @@ document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('login-form');
   const errorMsg = document.getElementById('error-msg');
   const togglePwBtn = document.getElementById('toggle-pw');
-  const pwInput = document.getElementById('route-pass');
+  
+  // --- CAMBIO CLAVE AQUÍ ---
+  // Antes buscaba 'route-pass', ahora busca el nuevo id 'password'
+  const pwInput = document.getElementById('password'); 
+  
+  const loginButton = document.getElementById('btn-login');
 
   form.addEventListener('submit', async (e) => {
-    e.preventDefault(); // Evita que la página se recargue
-    errorMsg.textContent = ''; // Limpia errores anteriores
+    e.preventDefault();
+    errorMsg.textContent = '';
 
     const email = form.email.value;
     const password = form.password.value;
-    const loginButton = document.getElementById('btn-login');
-
-    // Deshabilita el botón para evitar múltiples envíos
+    
     loginButton.disabled = true;
     loginButton.textContent = 'Ingresando...';
 
@@ -26,29 +29,27 @@ document.addEventListener('DOMContentLoaded', () => {
       });
 
       if (response.ok) {
-        // --- ¡ACCIÓN CLAVE! ---
-        // Si el login fue exitoso, redirige el navegador a la página principal.
-        window.location.href = '/'; 
+        window.location.href = '/';
       } else {
         const data = await response.json();
         errorMsg.textContent = data.error || 'Ocurrió un error inesperado.';
-        // Vuelve a habilitar el botón si hay un error
         loginButton.disabled = false;
         loginButton.textContent = 'Entrar';
       }
     } catch (err) {
       errorMsg.textContent = 'No se pudo conectar con el servidor.';
       console.error('Error de red al intentar iniciar sesión:', err);
-      // Vuelve a habilitar el botón si hay un error de red
       loginButton.disabled = false;
       loginButton.textContent = 'Entrar';
     }
   });
 
-  // Lógica para mostrar/ocultar la contraseña
-  togglePwBtn.addEventListener('click', () => {
-    const isPassword = pwInput.type === 'password';
-    pwInput.type = isPassword ? 'text' : 'password';
-    togglePwBtn.setAttribute('aria-pressed', String(!isPassword));
-  });
+  // Esta lógica para mostrar/ocultar contraseña ya funciona con los cambios
+  if (togglePwBtn && pwInput) {
+    togglePwBtn.addEventListener('click', () => {
+        const isPassword = pwInput.type === 'password';
+        pwInput.type = isPassword ? 'text' : 'password';
+        togglePwBtn.setAttribute('aria-pressed', String(!isPassword));
+    });
+  }
 });
