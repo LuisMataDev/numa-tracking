@@ -21,6 +21,16 @@ const io = socketIo(server, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
+  resave: false,
+  saveUninitialized: false, // No guardar sesiones vacías
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // true en producción (https)
+    maxAge: 1000 * 60 * 60 * 8 // Cookie válida por 8 horas
+  }
+}));
+
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -64,15 +74,6 @@ app.get('/', isAuthenticated, (req, res) => {
 // 4. AHORA SÍ, ponemos el guardia para el RESTO de la API
 app.use('/api', isAuthenticated);
 
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
-  resave: false,
-  saveUninitialized: false, // No guardar sesiones vacías
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production', // true en producción (https)
-    maxAge: 1000 * 60 * 60 * 8 // Cookie válida por 8 horas
-  }
-}));
 
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -255,9 +256,6 @@ async function computeAndSetDriverStatus(driverId) {
   }
   return driver;
 }
-
-// 1. La página de login es PÚBLICA
-
 
 // --- Rutas de la API para Choferes ---
 
