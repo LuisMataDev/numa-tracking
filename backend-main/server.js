@@ -5,6 +5,8 @@ const http = require('http');
 const socketIo = require('socket.io');
 const mongoose = require('mongoose');
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
+const session = require('express-session');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,6 +21,15 @@ const io = socketIo(server, {
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
+  resave: false,
+  saveUninitialized: false, // No guardar sesiones vacías
+  cookie: { 
+    secure: process.env.NODE_ENV === 'production', // true en producción (https)
+    maxAge: 1000 * 60 * 60 * 8 // Cookie válida por 8 horas
+  }
+}));
 
 
 const MONGODB_URI = process.env.MONGODB_URI;
@@ -45,16 +56,48 @@ function generatePassword(len = 8) {
   return out;
 }
 
-function generateInvalidPassword(len = 8) {
-  const chars = '* * *'; // evita O,0,I,1 ambigüedades
-  const bytes = crypto.randomBytes(len);
-  let out = '';
-  for (let i = 0; i < len; i++) {
-    out += chars[bytes[i] % chars.length];
+function isAuthenticated(req, res, next) {
+  if (req.session.adminId) {
+    return next(); // Si hay sesión, adelante.
   }
-  return out;
+  // Si no hay sesión, y es una petición de API, devuelve error
+  if (req.originalUrl.startsWith('/api/')) {
+     return res.status(401).json({ error: 'No autorizado. Por favor, inicie sesión.' });
+  }
+  // Si no, redirige a la página de login
+  res.redirect('/login.html');
 }
 // --- Schemas de la base de datos ---
+
+const superAdminSchema = new mongoose.Schema({
+  email: { 
+    type: String, 
+    required: true, 
+    unique: true, 
+    lowercase: true, 
+    trim: true 
+  },
+  password: { type: String, required: true }
+}, { timestamps: true });
+
+// Hook para hashear la contraseña ANTES de guardarla
+superAdminSchema.pre('save', async function(next) {
+  if (!this.isModified('password')) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// Método para comparar la contraseña ingresada con la hasheada
+superAdminSchema.methods.comparePassword = function(candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+const SuperAdmin = mongoose.model('SuperAdmin', superAdminSchema);
 
 // Esquema para Choferes (añadir campo status)
 const driverSchema = new mongoose.Schema({
@@ -170,7 +213,62 @@ async function computeAndSetDriverStatus(driverId) {
   return driver;
 }
 
+// 1. La página de login es PÚBLICA
+app.get('/login.html', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+// También el JS y CSS del login deben ser públicos (express.static ya lo hace)
+
+// 2. La ruta raíz ('/') ahora está PROTEGIDA
+app.get('/', isAuthenticated, (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html')); // Sirve tu panel de admin
+});
+
+// 3. ¡IMPORTANTE! Proteger TODAS tus rutas de API existentes con una sola línea
+app.use('/api', isAuthenticated); 
+// Este middleware se aplicará a todas las rutas que empiecen con /api, 
+// EXCEPTO las que definimos ANTES de esta línea (como /api/admin/login).
+// Por eso, la sección "Rutas de API para Administración" debe ir ANTES de esta línea.
+
 // --- Rutas de la API para Choferes ---
+
+// POST /api/admin/login
+app.post('/api/admin/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Se requiere email y contraseña.' });
+    }
+
+    const admin = await SuperAdmin.findOne({ email: email.toLowerCase() });
+    if (!admin) {
+      return res.status(401).json({ error: 'Credenciales inválidas.' }); // Mensaje genérico por seguridad
+    }
+    
+    const isMatch = await admin.comparePassword(password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Credenciales inválidas.' });
+    }
+
+    // ¡Éxito! Creamos la sesión.
+    req.session.adminId = admin._id;
+    res.status(200).json({ message: 'Login exitoso' });
+
+  } catch (err) {
+    console.error('Error en /api/admin/login', err);
+    res.status(500).json({ error: 'Error interno del servidor.' });
+  }
+});
+
+// POST /api/admin/logout
+app.post('/api/admin/logout', (req, res) => {
+  req.session.destroy(err => {
+    if (err) {
+      return res.status(500).json({ error: 'No se pudo cerrar la sesión.' });
+    }
+    res.status(200).json({ message: 'Logout exitoso.' });
+  });
+});
 
 app.get('/api/drivers', async (req, res) => {
   try {
