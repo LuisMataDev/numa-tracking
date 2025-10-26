@@ -328,6 +328,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <div class="route-li-content">
                 <div class="route-title">${route.name}</div>
                 <div class="route-meta">
+                    <span class="route-state" style="color: ${route.estado === 'lista para iniciar' ? '#3498db' : 'inherit'}">
+                        ${route.estado}
+                    </span>
                     <span class="route-points">${route.puntos ?? 0} pts</span>
                     <span class="route-state">${route.estado}</span>
                     <span class="route-color" title="${route.color}" style="
@@ -625,7 +628,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         routeDetail.innerHTML = `
     <div class="route-card" style="border-left:4px solid ${route.color}; padding:12px;">
         <h3>${route.name}</h3>
-        <p><strong>ID:</strong> ${route.id}</p>
+        <p><strong>Estado:</strong> 
+            <span style="font-weight: bold; color: ${route.estado === 'lista para iniciar' ? '#3498db' : 'inherit'}">
+             ${route.estado}
+            </span>
+        </p>
         <p><strong>Puntos:</strong> ${route.puntos ?? (route.coords ? route.coords.length : 0)}</p>
         <p><strong>Estado:</strong> ${route.estado}</p>
         <p><strong>Vehículo:</strong> ${vehicleAlias}</p>
