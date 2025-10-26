@@ -113,7 +113,12 @@ const routeSchema = new mongoose.Schema({
   color: { type: String, default: '#3b82f6' },
   coords: { type: [[Number]] },
   puntos: { type: Number },
-  estado: { type: String, default: 'pendiente' },
+  estado: {
+    type: String,
+    // --- CAMBIO AQUÍ: Añadimos 'lista para iniciar' ---
+    enum: ['pendiente', 'lista para iniciar', 'en curso', 'finalizada', 'cancelada'],
+    default: 'pendiente'
+  },
   vehicle: {
     id: { type: String, ref: 'Vehicle' },
     alias: { type: String },
@@ -447,18 +452,33 @@ app.patch('/api/routes/:id/status', async (req, res) => {
       : (req.body.status !== undefined && req.body.status !== null)
         ? String(req.body.status)
         : '';
-    const estadoLower = estado.toLowerCase().trim();
-    if (!estado) return res.status(400).json({ error: 'Se requiere campo "estado".' });
 
-    const ALLOWED = ['pendiente', 'en curso', 'finalizada', 'cancelada'];
+    if (!estado) {
+      return res.status(400).json({ error: 'Se requiere campo "estado".' });
+    }
+
+    // --- CAMBIO 1: Añadir 'lista para iniciar' a los estados permitidos ---
+    const ALLOWED = ['pendiente', 'lista para iniciar', 'en curso', 'finalizada', 'cancelada'];
     if (!ALLOWED.includes(estado)) {
       return res.status(400).json({ error: 'Estado no permitido', allowed: ALLOWED });
     }
 
     const route = await Route.findById(id);
-    if (!route) return res.status(404).json({ error: 'Ruta no encontrada' });
+    if (!route) {
+      return res.status(404).json({ error: 'Ruta no encontrada' });
+    }
 
     if (estado === 'en curso') {
+      // --- CAMBIO 2: VALIDACIÓN DE SEGURIDAD CLAVE ---
+      // Solo se puede iniciar una ruta si el chofer ya se autenticó para ella.
+      if (route.estado !== 'lista para iniciar') {
+        return res.status(400).json({
+          error: 'La ruta no puede ser iniciada. El chofer debe iniciar sesión en la app primero para que la ruta esté "Lista para iniciar".'
+        });
+      }
+      // --- Fin de la nueva validación ---
+
+      // Las validaciones originales siguen siendo importantes
       if (!route.driver || !route.driver.id) {
         return res.status(400).json({ error: 'No hay chofer asignado a la ruta. Asigna un chofer antes de iniciar la ruta.' });
       }
@@ -471,9 +491,13 @@ app.patch('/api/routes/:id/status', async (req, res) => {
       }
     }
 
+    // Si todas las validaciones pasan, se actualiza el estado
     const updated = await Route.findByIdAndUpdate(id, { estado }, { new: true, runValidators: true });
-    if (!updated) return res.status(404).json({ error: 'Ruta no encontrada' });
+    if (!updated) {
+      return res.status(404).json({ error: 'Ruta no encontrada durante la actualización' });
+    }
 
+    // Lógica para actualizar el estado del chofer
     if (estado === 'en curso' && updated.driver && updated.driver.id) {
       const driver = await Driver.findOne({ id: updated.driver.id });
       if (driver) {
@@ -482,11 +506,14 @@ app.patch('/api/routes/:id/status', async (req, res) => {
         io.emit('driversUpdated', driver.toJSON());
       }
     } else if (updated.driver && updated.driver.id) {
+      // Si el estado cambia a finalizada, cancelada, etc., recalcular el estado del chofer
       await computeAndSetDriverStatus(updated.driver.id);
     }
 
+    // Notificar a los clientes sobre el cambio de estado de la ruta
     io.emit('routeStatusChanged', updated.toJSON());
     res.json(updated);
+
   } catch (err) {
     console.error('PATCH /api/routes/:id/status', err);
     res.status(500).json({ error: 'Error al actualizar estado' });
@@ -498,8 +525,14 @@ app.post('/api/routes/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) return res.status(400).json({ error: 'Se requiere email y password' });
+
     const routeDoc = await Route.findOne({ password: String(password).trim() });
     if (!routeDoc) return res.status(404).json({ error: 'Ruta no encontrada (password inválida)' });
+
+    // Validación adicional: Solo se puede loguear en rutas pendientes.
+    if (routeDoc.estado !== 'pendiente') {
+      return res.status(403).json({ error: `La ruta ya no está pendiente. Estado actual: ${routeDoc.estado}` });
+    }
 
     let driver = null;
     if (routeDoc.driver && routeDoc.driver.id) {
@@ -511,19 +544,28 @@ app.post('/api/routes/login', async (req, res) => {
       driver = await Driver.findOne({ email: email.toLowerCase() });
     }
 
-    let driverToReturn = null;
-    if (driver) {
-      if (driver.status !== 'active-desocupado') {
-        driver.status = 'active-desocupado';
-        await driver.save();
-        io.emit('driversUpdated', driver.toJSON());
-      } else {
-        io.emit('driversUpdated', driver.toJSON());
-      }
-      driverToReturn = driver.toJSON();
+    if (!driver) {
+      return res.status(404).json({ error: 'Chofer no encontrado con ese email.' });
     }
 
-    return res.json({ route: routeDoc.toJSON(), driver: driverToReturn });
+    // --- CAMBIO CLAVE: Actualizar el estado de la RUTA ---
+    routeDoc.estado = 'lista para iniciar';
+    // Si la ruta no tenía chofer, se lo asignamos ahora
+    if (!routeDoc.driver || !routeDoc.driver.id) {
+      routeDoc.driver = { id: driver.id, name: driver.name };
+    }
+    await routeDoc.save();
+    // Notificamos al panel de administración que el estado de la ruta cambió
+    io.emit('routeStatusChanged', routeDoc.toJSON());
+    // --- FIN DEL CAMBIO CLAVE ---
+
+    // Ahora, actualizamos el estado del chofer a 'disponible'
+    driver.status = 'active-desocupado';
+    await driver.save();
+    io.emit('driversUpdated', driver.toJSON());
+
+    return res.json({ route: routeDoc.toJSON(), driver: driver.toJSON() });
+
   } catch (err) {
     console.error('POST /api/routes/login', err);
     res.status(500).json({ error: 'Error en login de ruta' });
