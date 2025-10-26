@@ -19,17 +19,21 @@ const io = socketIo(server, {
 
 // Middlewares
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
+app.use(express.json());
+
+// 1. INICIALIZA LA SESIÓN. Es lo primero para que todas las rutas la puedan usar.
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
   resave: false,
-  saveUninitialized: false, // No guardar sesiones vacías
+  saveUninitialized: false,
   cookie: { 
-    secure: process.env.NODE_ENV === 'production', // true en producción (https)
-    maxAge: 1000 * 60 * 60 * 8 // Cookie válida por 8 horas
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 1000 * 60 * 60 * 8
   }
 }));
+
+
 
 app.get('/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'login.html'));
@@ -66,10 +70,16 @@ app.post('/api/admin/logout', (req, res) => {
   });
 });
 
+
+
 // 3. La página principal (index) está PROTEGIDA
 app.get('/', isAuthenticated, (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // 4. AHORA SÍ, ponemos el guardia para el RESTO de la API
 app.use('/api', isAuthenticated);
@@ -258,44 +268,6 @@ async function computeAndSetDriverStatus(driverId) {
 }
 
 // --- Rutas de la API para Choferes ---
-
-// POST /api/admin/login
-app.post('/api/admin/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Se requiere email y contraseña.' });
-    }
-
-    const admin = await SuperAdmin.findOne({ email: email.toLowerCase() });
-    if (!admin) {
-      return res.status(401).json({ error: 'Credenciales inválidas.' }); // Mensaje genérico por seguridad
-    }
-    
-    const isMatch = await admin.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Credenciales inválidas.' });
-    }
-
-    // ¡Éxito! Creamos la sesión.
-    req.session.adminId = admin._id;
-    res.status(200).json({ message: 'Login exitoso' });
-
-  } catch (err) {
-    console.error('Error en /api/admin/login', err);
-    res.status(500).json({ error: 'Error interno del servidor.' });
-  }
-});
-
-// POST /api/admin/logout
-app.post('/api/admin/logout', (req, res) => {
-  req.session.destroy(err => {
-    if (err) {
-      return res.status(500).json({ error: 'No se pudo cerrar la sesión.' });
-    }
-    res.status(200).json({ message: 'Logout exitoso.' });
-  });
-});
 
 app.get('/api/drivers', async (req, res) => {
   try {
