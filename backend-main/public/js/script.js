@@ -302,6 +302,99 @@ async function fetchAndDrawRoutes() {
     }
 }
 
+let vehiculoSeleccionado = null; 
+
+// Suponemos que tienes una función que se ejecuta cuando se hace clic en un marcador de vehículo en el mapa
+// Esta función DEBE actualizar la variable `vehiculoSeleccionado`.
+// Por ejemplo:
+function onVehiculoClick(vehiculoInfo) {
+    console.log("Vehículo seleccionado:", vehiculoInfo);
+    vehiculoSeleccionado = vehiculoInfo;
+    
+    // Opcional: Resalta el botón de servicios para indicar que se puede usar
+    document.querySelector('.btn-services').style.border = '2px solid #3498db';
+}
+
+// Ejemplo de cómo la llamarías al crear un marcador en Leaflet:
+// L.marker([lat, lng]).on('click', () => onVehiculoClick({ id: 'VW-01', lat: lat, lng: lng })).addTo(map);
+
+
+// 2. Elementos del DOM
+const btnServices = document.querySelector('.btn-services');
+const servicesMenu = document.getElementById('services-menu');
+
+// 3. Lógica para mostrar/ocultar el menú
+btnServices.addEventListener('click', () => {
+    if (!vehiculoSeleccionado) {
+        alert("Por favor, selecciona primero un vehículo en el mapa.");
+        return;
+    }
+
+    // Muestra u oculta el menú
+    const isMenuVisible = servicesMenu.style.display === 'flex';
+    servicesMenu.style.display = isMenuVisible ? 'none' : 'flex';
+});
+
+// 4. Lógica para manejar la selección de un servicio
+servicesMenu.addEventListener('click', (event) => {
+    // Usamos delegación de eventos para no añadir un listener a cada botón
+    const targetButton = event.target.closest('.service-option');
+    
+    if (targetButton) {
+        const servicio = targetButton.dataset.service;
+        
+        console.log(`Solicitando servicio de '${servicio}' para el vehículo '${vehiculoSeleccionado.id}'`);
+        
+        // Llama a la función que enviará los datos al servidor
+        enviarSolicitudDeServicio(servicio, vehiculoSeleccionado);
+        
+        // Oculta el menú después de seleccionar una opción
+        servicesMenu.style.display = 'none';
+    }
+});
+
+
+// 5. Función que se comunica con el Back-End 📡
+async function enviarSolicitudDeServicio(tipoServicio, vehiculo) {
+    // Aquí es donde te comunicas con tu servidor
+    console.log("Enviando al backend:", {
+        idVehiculo: vehiculo.id,
+        servicio: tipoServicio,
+        ubicacion: {
+            lat: vehiculo.lat,
+            lng: vehiculo.lng
+        }
+    });
+
+    // Ejemplo usando la API fetch para enviar los datos a tu servidor
+    try {
+        const response = await fetch('/api/solicitar-servicio', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                idVehiculo: vehiculo.id,
+                servicio: tipoServicio,
+                ubicacion: {
+                    lat: vehiculo.lat, // Asumiendo que guardas la última ubicación
+                    lng: vehiculo.lng
+                }
+            })
+        });
+
+        if (response.ok) {
+            const resultado = await response.json();
+            alert(`Solicitud de ${tipoServicio} enviada con éxito. ID de ticket: ${resultado.ticketId}`);
+        } else {
+            alert("Error al enviar la solicitud.");
+        }
+    } catch (error) {
+        console.error("Error de red:", error);
+        alert("Error de conexión al enviar la solicitud.");
+    }
+}
+
 function updateInfoPanel(route) {
     document.getElementById('route-name-display').textContent = route.name || 'Sin asignar';
     document.getElementById('route-id-display').textContent = route.id || 'Sin asignar';

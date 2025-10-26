@@ -73,8 +73,30 @@
         </header>
 
         <section id="principal">
+
+
             <!-- Contenedor donde Leaflet dibujará el mapa -->
-            <div id="draw-map"></div>
+            <div id="draw-map">
+                <button class="btn-services">
+                    <i class="fa fa-wrench" aria-hidden="true"></i>
+                </button>
+
+                <div id="services-menu" class="services-menu-container" style="display: none;">
+                    <button class="service-option" data-service="grua">
+                        <i class="fa-solid fa-truck-pickup"></i><span>Grúa</span>
+                    </button>
+                    <button class="service-option" data-service="gasolina">
+                        <i class="fa-solid fa-gas-pump"></i><span>Gasolina</span>
+                    </button>
+                    <button class="service-option" data-service="mecanico">
+                        <i class="fa-solid fa-user-gear"></i><span>Mecánico</span>
+                    </button>
+                    <button class="service-option" data-service="llanta">
+                        <i class="fa-solid fa-car-burst"></i><span>Llantero</span>
+                    </button>
+                </div>
+            </div>
+
             <!-- Texto de estado: ruta o coordenadas del móvil -->
             <p id="status" style="text-align:center; margin-top:8px; color:#fff;">
                 Cargando mapa…

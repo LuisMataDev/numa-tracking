@@ -229,6 +229,64 @@ section#principal {
   border-radius: 8px;
 }
 
+.btn-services {
+  position: absolute;   /* Posiciónalo sobre su contenedor padre */
+  top: 15px;            /* 15px desde el borde superior del mapa */
+  right: 15px;          /* 15px desde el borde derecho del mapa */
+  z-index: 1000;        /* Un valor alto para que esté sobre el mapa */
+
+  /* Estilos para un look redondo y pulido */
+  width: 70px;
+  height: 70px;
+  background: #0b1228;
+  color: #fff;
+  border-radius: 50%;   /* Lo hace perfectamente redondo */
+  border: none;
+  cursor: pointer;
+  font-size: 22px;      /* Aumenta el tamaño del ícono si es necesario */
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3); /* Añade una sombra sutil */
+
+  /* Centra el ícono de la llave inglesa */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.services-menu-container {
+  position: absolute;
+  top: 75px; /* Justo debajo del botón principal (50px de alto + 15px de margen + 10px extra) */
+  right: 15px;
+  z-index: 1000; /* Ligeramente por debajo del botón principal */
+  display: flex;
+  flex-direction: column; /* Apila los botones verticalmente */
+  gap: 10px; /* Espacio entre los botones */
+  background-color: #0b1228;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* NUEVO: Estilos para cada botón de opción de servicio */
+.service-option {
+  background-color: #2c3e50;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px; /* Espacio entre el ícono y el texto */
+  transition: background-color 0.2s;
+  font-size: 14px;
+  text-align: left;
+  width: 120px; /* Ancho fijo para alineación */
+}
+
+.service-option:hover {
+  background-color: #34495e;
+}
+
 #status {
   text-align: center;
   margin-top: 8px;
