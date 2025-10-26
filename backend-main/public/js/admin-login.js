@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const errorMsg = document.getElementById('error-msg');
     const togglePwBtn = document.getElementById('toggle-pw');
 
+
+
     // --- CAMBIO CLAVE AQUÍ ---
     // Antes buscaba 'route-pass', ahora busca el nuevo id 'password'
     const pwInput = document.getElementById('password');
@@ -27,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json',
                 },
+                credentials: 'same-origin', // <--- importante
                 body: JSON.stringify({ email, password }),
             });
 

@@ -21,12 +21,14 @@ const io = socketIo(server, {
 app.use(express.json());
 
 // 1. INICIALIZA LA SESIÓN
+app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret_peligroso',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
-    secure: process.env.NODE_ENV === 'production',
+  cookie: {
+    secure: process.env.NODE_ENV === 'production', // true en prod (solo HTTPS)
+    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax',
     maxAge: 1000 * 60 * 60 * 8
   }
 }));
@@ -46,8 +48,14 @@ app.post('/api/admin/login', async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Credenciales inválidas.' });
     }
-    req.session.adminId = admin._id; // ¡Éxito! Creamos la sesión.
-    res.status(200).json({ message: 'Login exitoso' });
+    req.session.adminId = admin._id;
+    req.session.save((err) => {
+      if (err) {
+        console.error('Error guardando sesión tras login', err);
+        return res.status(500).json({ error: 'Error guardando sesión' });
+      }
+      res.status(200).json({ message: 'Login exitoso' });
+    });
   } catch (err) {
     console.error('Error en /api/admin/login', err);
     res.status(500).json({ error: 'Error interno del servidor.' });
@@ -112,7 +120,7 @@ function isAuthenticated(req, res, next) {
   }
   // Si no hay sesión, y es una petición de API, devuelve error
   if (req.originalUrl.startsWith('/api/')) {
-     return res.status(401).json({ error: 'No autorizado. Por favor, inicie sesión.' });
+    return res.status(401).json({ error: 'No autorizado. Por favor, inicie sesión.' });
   }
   // Si no, redirige a la página de login
   res.redirect('/login.html');
@@ -120,18 +128,18 @@ function isAuthenticated(req, res, next) {
 // --- Schemas de la base de datos ---
 
 const superAdminSchema = new mongoose.Schema({
-  email: { 
-    type: String, 
-    required: true, 
-    unique: true, 
-    lowercase: true, 
-    trim: true 
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true
   },
   password: { type: String, required: true }
 }, { timestamps: true });
 
 // Hook para hashear la contraseña ANTES de guardarla
-superAdminSchema.pre('save', async function(next) {
+superAdminSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   try {
     const salt = await bcrypt.genSalt(10);
@@ -143,7 +151,7 @@ superAdminSchema.pre('save', async function(next) {
 });
 
 // Método para comparar la contraseña ingresada con la hasheada
-superAdminSchema.methods.comparePassword = function(candidatePassword) {
+superAdminSchema.methods.comparePassword = function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
