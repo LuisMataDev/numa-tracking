@@ -23,11 +23,12 @@ body {
   color: var(--text);
   display: flex;
   min-height: 100vh;
+  width: 100%;
 }
 
 /* Sidebar */
 #sidebar {
-  position: fixed;
+ position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
@@ -53,7 +54,7 @@ body {
 #sidebar li {
   display: block;
   margin: 8px 0;
-  padding-bottom: 100px;
+  padding-bottom: 70px;
 }
 
 #sidebar a {

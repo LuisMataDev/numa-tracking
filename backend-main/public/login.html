@@ -1,68 +1,73 @@
 <!doctype html>
 <html lang="es">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>NUMA - Acceso Administrador</title>
-    <link rel="stylesheet" href="./css/admin-login.css">
-
+  
+  <link rel="stylesheet" href="./css/admin-login.css"> 
+  
+  <link rel="icon" type="image/png" sizes="16x16" href="html/img/logo.png">
 </head>
-
 <body>
-  <div class="wrap">
-    <header class="brand center">
-      <div class="logo">
-        <img src="/html/img/logo.png" alt="Logo de NUMA">
-      </div>
-      <div>
-        <h1>NUMA</h1>
-        <p class="muted">Acceso Administrador — Gestiona tus rutas</p>
-      </div>
-    </header>
 
-    <main class="card" role="main" aria-labelledby="login-title">
-      <div>
-        <h2 id="login-title" style="margin:0 0 6px 0">Ingresar como administrador</h2>
-        <div class="hint">Introduce tu correo y contraseña</div>
-      </div>
+  <div class="login-container">
 
-      <form id="login-form" autocomplete="on" novalidate>
-        <div class="field">
-          <label for="email">Correo electrónico</label>
-          <input id="email" name="email" type="email" placeholder="tu@empresa.com" required aria-required="true" />
-        </div>
-
-        <div class="field">
-          <label for="password">Contraseña</label>
-          <div class="pw-wrap">
-            <input id="password" name="password" type="password" placeholder="••••••••" required aria-required="true" />
-            <button type="button" id="toggle-pw" class="icon-btn" title="Mostrar / ocultar contraseña" aria-pressed="false">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
-                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </button>
+    <div class="form-panel">
+      
+      <div class="wrap"> 
+        <header class="brand center">
+          <div class="logo">
+            <img src="/html/img/logo.png" alt="Logo de NUMA">
           </div>
-        </div>
-        <div class="row-between" style="align-items:center; margin-top:6px">
-          <a class="small muted" href="#"
-            onclick="alert('');return false;">¿Olvidaste la
-            contraseña?</a>
-        </div>
+          <div>
+            <h1>NUMA</h1>
+            <p class="muted">Acceso Administrador — Gestiona tus rutas</p>
+          </div>
+        </header>
 
+        <main class="card" role="main" aria-labelledby="login-title">
+          <div>
+            <h2 id="login-title" style="margin:0 0 6px 0">Ingresar como administrador</h2>
+            <div class="hint">Introduce tu correo y contraseña</div>
+          </div>
 
-        <div class="error" id="error-msg" role="alert" aria-live="assertive"></div>
+          <form id="login-form" autocomplete="on" novalidate>
+            <div class="field">
+              <label for="email">Correo electrónico</label>
+              <input id="email" name="email" type="email" placeholder="tu@empresa.com" required aria-required="true" />
+            </div>
 
-        <div class="card-footer">
-          <button id="btn-login" class="btn-primary" type="submit">
-            Entrar
-          </button>
-        </div>
-      </form>
-    </main>
-  </div>
+            <div class="field">
+              <label for="password">Contraseña</label>
+              <div class="pw-wrap">
+                <input id="password" name="password" type="password" placeholder="••••••••" required aria-required="true" />
+                <button type="button" id="toggle-pw" class="icon-btn" title="Mostrar / ocultar contraseña" aria-pressed="false">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="row-between" style="align-items:center; margin-top:6px">
+              <a class="small muted" href="#"
+                onclick="alert('');return false;">¿Olvidaste la
+                contraseña?</a>
+            </div>
 
-  <script src="/js/admin-login.js"></script>
+            <div class="error" id="error-msg" role="alert" aria-live="assertive"></div>
+
+            <div class="card-footer">
+              <button id="btn-login" class="btn-primary" type="submit">
+                Entrar
+              </button>
+            </div>
+          </form>
+        </main>
+      </div> </div> <div class="image-panel">
+      </div>
+
+  </div> <script src="/js/admin-login.js"></script>
 </body>
 </html>

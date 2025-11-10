@@ -74,54 +74,54 @@ document.addEventListener('DOMContentLoaded', async () => {
         filterAndRenderRoutes();
         filterPopup.classList.add('hidden');
     });
-    
+
     // El listener del searchInput sigue igual
     searchInput.addEventListener('input', filterAndRenderRoutes);
 
-   function populateStatusFilter() {
-    const statuses = {
-        '': 'Todos los estados',
-        'pendiente': 'Pendiente',
-        'lista para iniciar': 'Lista para Iniciar',
-        'en curso': 'En Curso',
-        'finalizada': 'Finalizada',
-        'cancelada': 'Cancelada'
-    };
+    function populateStatusFilter() {
+        const statuses = {
+            '': 'Todos los estados',
+            'pendiente': 'Pendiente',
+            'lista para iniciar': 'Lista para Iniciar',
+            'en curso': 'En Curso',
+            'finalizada': 'Finalizada',
+            'cancelada': 'Cancelada'
+        };
 
-    // Referencia al elemento select del panel de filtros
-    const statusFilter = document.getElementById('status-filter');
-    
-    statusFilter.innerHTML = ''; // Limpiar opciones por si acaso
-    for (const value in statuses) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = statuses[value];
-        statusFilter.appendChild(option);
+        // Referencia al elemento select del panel de filtros
+        const statusFilter = document.getElementById('status-filter');
+
+        statusFilter.innerHTML = ''; // Limpiar opciones por si acaso
+        for (const value in statuses) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = statuses[value];
+            statusFilter.appendChild(option);
+        }
+
+        // --- CAMBIO CLAVE: Establecer "Pendiente" como valor por defecto ---
+        statusFilter.value = 'pendiente';
     }
 
-    // --- CAMBIO CLAVE: Establecer "Pendiente" como valor por defecto ---
-    statusFilter.value = 'pendiente';
-}
+    function populateVehicleFilter() {
+        vehicleFilter.innerHTML = '<option value="">-- Todos --</option>';
+        vehicles.forEach(v => {
+            const option = document.createElement('option');
+            option.value = v.id;
+            option.textContent = `${v.alias || v.marca} (${v.id})`;
+            vehicleFilter.appendChild(option);
+        });
+    }
 
-function populateVehicleFilter() {
-    vehicleFilter.innerHTML = '<option value="">-- Todos --</option>';
-    vehicles.forEach(v => {
-        const option = document.createElement('option');
-        option.value = v.id;
-        option.textContent = `${v.alias || v.marca} (${v.id})`;
-        vehicleFilter.appendChild(option);
-    });
-}
-
-function populateDriverFilter() {
-    driverFilter.innerHTML = '<option value="">-- Todos --</option>';
-    drivers.forEach(d => {
-        const option = document.createElement('option');
-        option.value = d.id;
-        option.textContent = d.name;
-        driverFilter.appendChild(option);
-    });
-}
+    function populateDriverFilter() {
+        driverFilter.innerHTML = '<option value="">-- Todos --</option>';
+        drivers.forEach(d => {
+            const option = document.createElement('option');
+            option.value = d.id;
+            option.textContent = d.name;
+            driverFilter.appendChild(option);
+        });
+    }
 
     // Inicializa el mapa con la vista por defecto. Se moverá si la geolocalización tiene éxito.
     const drawMap = L.map('draw-map').setView(defaultCoords, 13);
@@ -274,7 +274,13 @@ function populateDriverFilter() {
     function updateDrawUI() {
         if (isTraceFreeMode) {
             btnStartDraw.innerHTML = '<i class="fa-solid fa-map-pin"></i> Colocar Puntos';
-            drawHelperText.textContent = 'Haz clic en el mapa para marcar el inicio y luego el fin de la ruta.';
+
+            // --- INICIO DE CORRECCIÓN ---
+            if (drawHelperText) {
+                drawHelperText.textContent = 'Haz clic en el mapa para marcar el inicio y luego el fin de la ruta.';
+            }
+            // --- FIN DE CORRECCIÓN ---
+
             // En modo sin trazo, estos botones no tienen sentido
             btnUndoPoint.style.display = 'none';
             btnAddFinalPoint.style.display = 'none';
@@ -282,7 +288,14 @@ function populateDriverFilter() {
         } else {
             btnStartDraw.innerHTML = '📍';
             btnStartDraw.title = 'Iniciar trazo';
-            drawHelperText.textContent = 'Haz clic en "Iniciar trazo" y luego en el mapa para añadir puntos.';
+
+            // --- INICIO DE CORRECCIÓN ---
+            if (drawHelperText) {
+                drawHelperText.textContent = 'Haz clic en "Iniciar trazo" y luego en el mapa para añadir puntos.';
+
+            }
+            // --- FIN DE CORRECCIÓN ---
+
             // Mostramos los botones de nuevo
             btnUndoPoint.style.display = 'inline-block';
             btnAddFinalPoint.style.display = 'inline-block';
@@ -328,49 +341,6 @@ function populateDriverFilter() {
         return `#${hex(r)}${hex(g)}${hex(b)}`;
     }
 
-    // Helper: recalcula y actualiza el estado de un chofer según sus rutas
-    async function computeAndSetDriverStatus(driverId) {
-        if (!driverId) return null;
-
-        // Buscar rutas asignadas a este chofer
-        // Asumimos que en la ruta se guarda driver: { id, name }
-        const assignedRoutes = await Route.find({ 'driver.id': driverId }).select('estado').lean();
-
-        // Si hay alguna en curso -> ocupado
-        const hasEnCurso = assignedRoutes.some(r => (r.estado || '').toLowerCase() === 'en curso');
-
-        // Si no hay en curso pero hay pendientes -> desocupado (o si no hay rutas = desocupado cuando está activo)
-        const hasPendiente = assignedRoutes.some(r => (r.estado || '').toLowerCase() === 'pendiente');
-
-        // Decide nuevo estado: (si está logueado debería ser active-..., si no, lo dejamos como inactive)
-        // Vamos a leer el chofer actual
-        const driver = await Driver.findOne({ id: driverId });
-        if (!driver) return null;
-
-        let newStatus = 'inactive';
-        // Suponemos que si el chofer ya no está logueado, su status puede permanecer 'inactive'.
-        // Para simplificar: si driver.status === 'inactive' no lo activamos aquí automáticamente;
-        // la activación por login la maneja /login. Aquí solo ajustamos entre desocupado/ocupado
-        if (driver.status === 'inactive') {
-            // No cambiamos automáticamente a active desde aquí (salvo que quieras)
-            // Retornamos el driver tal cual.
-            return driver;
-        }
-
-        // driver está activo => decidir entre ocupado / desocupado
-        if (hasEnCurso) newStatus = 'active-ocupado';
-        else newStatus = 'active-desocupado';
-
-        if (driver.status !== newStatus) {
-            driver.status = newStatus;
-            await driver.save();
-            // emitir evento socket para notificar cambio
-            try { io.emit('driversUpdated', driver.toJSON()); } catch (e) { /* no bloquear */ }
-        }
-
-        return driver;
-    }
-
     // Normalizar ruta recibida desde API/BD a nuestro formato de cliente
     function normalizeRoute(raw) {
         const id = raw._id ? raw._id.toString() : raw.id;
@@ -382,19 +352,19 @@ function populateDriverFilter() {
             const hex = rgbArrayToHex(color);
             if (hex) color = hex;
         }
-
         const coords = Array.isArray(raw.coords) && raw.coords.length ? raw.coords : null;
         const puntos = raw.puntos || (coords ? coords.length : 0);
         const estado = raw.estado || 'pendiente';
         const vehicle = raw.vehicle || null;
-
-        // normalizar driver/chofer si existe
         const driver = raw.driver || raw.chofer || null;
-
-        // <-- AÑADIDO: password si existe
         const password = raw.password || raw.pass || null;
+        const isTraceFree = raw.isTraceFree || false;
+        const createdAt = raw.createdAt || new Date().toISOString(); // Añade la fecha de creación
 
-        return { id, name, color, coords, puntos, estado, vehicle, driver, password };
+        return {
+            id, name, color, coords, puntos, estado, vehicle, driver, password, isTraceFree,
+            createdAt
+        };
     }
 
 
@@ -404,23 +374,49 @@ function populateDriverFilter() {
         const li = document.createElement('li');
         li.className = 'route-item';
         li.dataset.id = route.id;
+
+        const traceFreeIcon = route.isTraceFree
+            ? `<i class="fa fa-flag" aria-hidden="true" title="Ruta sin trazo" style="margin-left: 8px; color: ${route.color}; font-size: 0.9em;"></i>`
+            : '';
+
+        const statusStyle = route.estado === 'lista para iniciar' ? 'style="color: #3498db"' : '';
+
+        // --- 1. FORMATEAR LA HORA ---
+        let formattedTime = '';
+        if (route.createdAt) {
+            const createdAt = new Date(route.createdAt);
+            // Formato: "9 nov, 17:09" (Ajusta 'es-MX' a tu zona si es necesario)
+            formattedTime = createdAt.toLocaleString('es-MX', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // --- 2. HTML ACTUALIZADO CON FLEXBOX ---
+        // Usamos flexbox para alinear la hora a la derecha
         li.innerHTML = `
-            <div class="route-li-content">
-                <div class="route-title">${route.name}</div>
-                <div class="route-meta">
-                    <span class="route-state" style="color: ${route.estado === 'lista para iniciar' ? '#3498db' : 'inherit'}">
-                        ${route.estado}
-                    </span>
-                    <span class="route-points">${route.puntos ?? 0} pts</span>
-                    <span class="route-state">${route.estado}</span>
-                    <span class="route-color" title="${route.color}" style="
-                        display:inline-block;
-                        width:12px;height:12px;border-radius:3px;
-                        background:${route.color};margin-left:8px;vertical-align:middle;"></span>
-                </div>
-                
+        <div class="route-li-content" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="route-info-left">
+            <div class="route-title">${route.name} ${traceFreeIcon}</div>
+            <div class="route-meta">
+            <span class="route-state" ${statusStyle}>
+            ${route.estado}
+            </span>
+            <span class="route-points">${route.puntos ?? 0} pts</span>
+            <span class="route-color" title="${route.color}" style="
+            display:inline-block;
+            width:12px;height:12px;border-radius:3px;
+            background:${route.color};margin-left:8px;vertical-align:middle;"></span>
             </div>
-        `;
+            </div>
+
+            <div class="route-time" style="font-size: 0.85em; color: #555; white-space: nowrap; margin-left: 10px;">
+            ${formattedTime}
+            </div>
+
+        </div>`;
         routeItems.appendChild(li);
         li.addEventListener('click', () => showRouteDetail(route.id));
     }
@@ -450,12 +446,11 @@ function populateDriverFilter() {
             filterAndRenderRoutes('');
             renderVehicleOptions();
             renderDriverOptions(); // --- poblar select de 
-            
-            // --- LLAMAR A LAS FUNCIONES DE POBLADO ---
-           populateStatusFilter();
-           populateVehicleFilter();
-           populateDriverFilter();
 
+            // --- LLAMAR A LAS FUNCIONES DE POBLADO ---
+            populateStatusFilter();
+            populateVehicleFilter();
+            populateDriverFilter();
             filterAndRenderRoutes();
 
         } catch (err) {
@@ -488,56 +483,56 @@ function populateDriverFilter() {
     /**
      * Filtra las rutas basándose en una consulta y las renderiza en el panel.
      */
-   function filterAndRenderRoutes() {
-    routeItems.innerHTML = '';
+    function filterAndRenderRoutes() {
+        routeItems.innerHTML = '';
 
-    // 1. Obtener los valores de todos los filtros activos
-    const query = searchInput.value.toLowerCase();
-    const selectedStatus = document.getElementById('status-filter').value;
-    const selectedVehicleId = document.getElementById('vehicle-filter').value;
-    const selectedDriverId = document.getElementById('driver-filter').value;
+        // 1. Obtener los valores de todos los filtros activos
+        const query = searchInput.value.toLowerCase();
+        const selectedStatus = document.getElementById('status-filter').value;
+        const selectedVehicleId = document.getElementById('vehicle-filter').value;
+        const selectedDriverId = document.getElementById('driver-filter').value;
 
-    const filteredRoutes = routes.filter(route => {
-        // 2. Comprobar cada filtro de tipo <select>
-        // La ruta debe coincidir con todos los filtros seleccionados.
-        // Si un filtro está vacío ("-- Todos --"), se considera una coincidencia.
-        const statusMatch = !selectedStatus || route.estado === selectedStatus;
-        const vehicleMatch = !selectedVehicleId || (route.vehicle && route.vehicle.id === selectedVehicleId);
-        const driverMatch = !selectedDriverId || (route.driver && route.driver.id === selectedDriverId);
+        const filteredRoutes = routes.filter(route => {
+            // 2. Comprobar cada filtro de tipo <select>
+            // La ruta debe coincidir con todos los filtros seleccionados.
+            // Si un filtro está vacío ("-- Todos --"), se considera una coincidencia.
+            const statusMatch = !selectedStatus || route.estado === selectedStatus;
+            const vehicleMatch = !selectedVehicleId || (route.vehicle && route.vehicle.id === selectedVehicleId);
+            const driverMatch = !selectedDriverId || (route.driver && route.driver.id === selectedDriverId);
 
-        // Si no cumple con alguno de los filtros de selección, la descartamos inmediatamente.
-        if (!statusMatch || !vehicleMatch || !driverMatch) {
-            return false;
+            // Si no cumple con alguno de los filtros de selección, la descartamos inmediatamente.
+            if (!statusMatch || !vehicleMatch || !driverMatch) {
+                return false;
+            }
+
+            // 3. Si pasó los filtros de selección, ahora comprobamos el filtro de texto.
+            // Si no hay texto en la barra de búsqueda, la ruta es válida.
+            if (query === '') {
+                return true;
+            }
+
+            // Si hay texto, aplicamos la misma lógica de búsqueda que ya tenías.
+            const vehicleInfo = route.vehicle && vehicles.find(v => v.id === route.vehicle.id);
+            const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca || '').toLowerCase() : '';
+            const driverName = route.driver ? (route.driver.name || '').toLowerCase() : '';
+
+            return (
+                (route.name && route.name.toLowerCase().includes(query)) ||
+                (route.id && route.id.toLowerCase().includes(query)) ||
+                (route.estado && route.estado.toLowerCase().includes(query)) ||
+                (vehicleAlias.includes(query)) ||
+                (driverName.includes(query))
+            );
+        });
+
+        // 4. Renderizar el resultado
+        if (filteredRoutes.length === 0) {
+            // Mensaje actualizado para reflejar los nuevos filtros
+            routeItems.innerHTML = '<li class="empty">No se encontraron rutas con los filtros aplicados.</li>';
+        } else {
+            filteredRoutes.forEach(addListItem);
         }
-
-        // 3. Si pasó los filtros de selección, ahora comprobamos el filtro de texto.
-        // Si no hay texto en la barra de búsqueda, la ruta es válida.
-        if (query === '') {
-            return true;
-        }
-
-        // Si hay texto, aplicamos la misma lógica de búsqueda que ya tenías.
-        const vehicleInfo = route.vehicle && vehicles.find(v => v.id === route.vehicle.id);
-        const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca || '').toLowerCase() : '';
-        const driverName = route.driver ? (route.driver.name || '').toLowerCase() : '';
-
-        return (
-            (route.name && route.name.toLowerCase().includes(query)) ||
-            (route.id && route.id.toLowerCase().includes(query)) ||
-            (route.estado && route.estado.toLowerCase().includes(query)) ||
-            (vehicleAlias.includes(query)) ||
-            (driverName.includes(query))
-        );
-    });
-
-    // 4. Renderizar el resultado
-    if (filteredRoutes.length === 0) {
-        // Mensaje actualizado para reflejar los nuevos filtros
-        routeItems.innerHTML = '<li class="empty">No se encontraron rutas con los filtros aplicados.</li>';
-    } else {
-        filteredRoutes.forEach(addListItem);
     }
-}
 
     function renderVehicleOptions() {
         routeVehicleSelect.innerHTML = '<option value="">-- Sin asignar --</option>';
@@ -641,7 +636,7 @@ function populateDriverFilter() {
             color,
             coords: tempCoords,
             vehicle: vehicle ? { id: vehicle.id, alias: vehicle.alias, marca: vehicle.marca } : null,
-            driver: driver ? { id: driver.id, name: driver.name } : null, // --- incluir driver aquí
+            driver: driver ? { id: driver.id, name: driver.name } : null,
             isTraceFree: document.getElementById('trace-free-switch').checked
         };
 
@@ -698,173 +693,338 @@ function populateDriverFilter() {
 
     // Mostrar detalle
     async function showRouteDetail(id) {
-    // 1. Resalta el elemento activo en la lista
-    document.querySelectorAll('#route-items li')
-        .forEach(li => li.classList.toggle('active', li.dataset.id === id));
+        // 1. Resalta el elemento activo en la lista
+        document.querySelectorAll('#route-items li')
+            .forEach(li => li.classList.toggle('active', li.dataset.id === id));
 
-    let route = routes.find(r => r.id === id);
-    if (!route) return;
+        let route = routes.find(r => r.id === id);
+        if (!route) return;
 
-    // 2. Si faltan detalles (coordenadas), búscalos en el servidor
-    if (!route.coords) {
-        try {
-            const res = await fetch(`/api/routes/${id}`);
-            if (res.ok) {
-                const fullRouteData = await res.json();
-                const normalized = normalizeRoute(fullRouteData); // Asumo que tienes esta función
-                const idx = routes.findIndex(r => r.id === id);
-                if (idx !== -1) routes[idx] = normalized;
-                route = normalized;
+        // 2. Si faltan detalles (coordenadas), búscalos en el servidor
+        if (!route.coords) {
+            try {
+                const res = await fetch(`/api/routes/${id}`);
+                if (res.ok) {
+                    const fullRouteData = await res.json();
+                    const normalized = normalizeRoute(fullRouteData);
+                    const idx = routes.findIndex(r => r.id === id);
+                    if (idx !== -1) routes[idx] = normalized;
+                    route = normalized;
+                }
+            } catch (err) {
+                console.warn('No se pudo obtener el detalle completo de la ruta:', err);
             }
-        } catch (err) {
-            console.warn('No se pudo obtener el detalle completo de la ruta:', err);
+        }
+
+        // 3. Prepara las variables para la plantilla
+        const vehicleInfo = route.vehicle ? vehicles.find(v => v.id === route.vehicle.id) : null;
+        const driverData = route.driver ? drivers.find(d => d.id === route.driver.id) : null;
+        const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca) : 'No asignado';
+        const driverName = route.driver ? route.driver.name : 'No asignado';
+        let driverStatusHtml = '';
+        if (driverData) {
+            const { text, color } = driverStatusInfo[driverData.status] || defaultStatusInfo;
+            driverStatusHtml = `<span style="color: ${color}; margin-left: 8px;">(${text})</span>`;
+        }
+
+        // --- LÓGICA CENTRALIZADA DE ESTADOS Y COLORES ---
+        const routeStatus = route.estado;
+        const canStart = route.coords && route.coords.length >= 2;
+
+        // Reglas de negocio
+        const isEditable = routeStatus === 'pendiente'; // Solo se puede editar o eliminar en 'pendiente'
+        const isCancelable = routeStatus === 'en curso'; // Solo se puede cancelar en 'en curso'
+        const isActionable = ['pendiente', 'lista para iniciar', 'en curso'].includes(routeStatus);
+
+        // Colores base
+        const blue = '#6c8cff';
+        const green = '#2ecc71';
+        const red = '#e74c3c';
+        const grey = '#95a5a6';
+
+        // Determina colores y estados de los botones
+        const cardBorderColor = routeStatus === 'cancelada' ? red : route.color;
+        const editDeleteButtonColor = isEditable ? blue : grey;
+
+        let actionButtonColor = grey;
+        let actionButtonText = routeStatus.charAt(0).toUpperCase() + routeStatus.slice(1);
+        let actionButtonDisabled = true;
+
+        if (routeStatus === 'pendiente') {
+            actionButtonColor = blue;
+            actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
+            actionButtonDisabled = !canStart;
+        } else if (routeStatus === 'lista para iniciar') {
+            actionButtonColor = green;
+            actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
+            actionButtonDisabled = !canStart;
+        } else if (isCancelable) {
+            actionButtonColor = red;
+            actionButtonText = 'Cancelar Ruta';
+            actionButtonDisabled = false;
+        }
+
+        // 4. Construye el HTML final (se eliminó el párrafo de estado duplicado)
+        routeDetail.innerHTML = `
+        <div class="route-card" style="border-left: 4px solid ${cardBorderColor}; padding: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px;">
+                <h3 style="margin: 0; line-height: 1.2;">${route.name}</h3>
+                <i id="btn-clone-route" class="fa fa-clone" aria-hidden="true" 
+                style="font-size: 1.3em; color: #6c8cff; cursor: pointer; padding: 3px; margin-left: 10px;" 
+                title="Clonar esta ruta"></i>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+                <div>
+                    <strong style="font-size: 0.9em; color: #555; display: block; margin-bottom: 2px;">Estado:</strong>
+                    <span style="font-weight: bold; text-transform: capitalize;">${route.estado}</span>
+                </div>
+                <div>
+                    <strong style="font-size: 0.9em; color: #555; display: block; margin-bottom: 2px;">Puntos:</strong>
+                    <span>${route.puntos ?? (route.coords ? route.coords.length : 0)}</span>
+                </div>
+                <div>
+                    <strong style="font-size: 0.9em; color: #555; display: block; margin-bottom: 2px;">Vehículo:</strong>
+                    <span>${vehicleAlias}</span>
+                </div>
+                <div>
+                    <strong style="font-size: 0.9em; color: #555; display: block; margin-bottom: 2px;">Chofer:</strong>
+                    <span>${driverName}${driverStatusHtml}</span>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                <div >
+                    <strong style="font-size: 0.9em; color: #555;">Contraseña:</strong>
+                    <p id="route-password" style="margin: 2px 0 0 0; font-weight: bold; color: #333;">${route.password || 'No generada'}</p>
+                </div>
+                ${route.password ? `
+                <button id="btn-copy-password" style="background: ${blue}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;">Copiar</button>
+                ` : ''}
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <button id="btn-edit-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
+                        Editar
+                    </button>
+                    <button id="btn-delete-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
+                        Eliminar
+                    </button>
+                </div>
+                    <button id="start-cancel-route" style="background: ${actionButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${actionButtonDisabled ? 'disabled' : ''}>
+                    ${actionButtonText}
+                    </button>
+                </div>
+            </div> `;
+
+        // 5. Asigna los event listeners de forma segura para evitar duplicados
+        if (isEditable) {
+            document.getElementById('btn-edit-route').addEventListener('click', () => editRoute(route.id));
+            document.getElementById('btn-delete-route').addEventListener('click', () => deleteRoute(route.id));
+        }
+
+        if (isActionable) {
+            document.getElementById('start-cancel-route').addEventListener('click', () => {
+                if (route.estado === 'en curso') {
+                    cancelRoute(route.id);
+                } else {
+                    startRoute(route.id);
+                }
+            });
+        }
+        document.getElementById('btn-clone-route').addEventListener('click', () => cloneRoute(route.id));
+        const copyBtn = document.getElementById('btn-copy-password');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const pwd = document.getElementById('route-password')?.textContent || '';
+                if (!pwd || pwd === 'No generada') return;
+                navigator.clipboard.writeText(pwd).then(() => {
+                    copyBtn.textContent = 'Copiado';
+                    setTimeout(() => copyBtn.textContent = 'Copiar', 1200);
+                });
+            });
         }
     }
-    
-    // 3. Prepara las variables para la plantilla
-    const vehicleInfo = route.vehicle ? vehicles.find(v => v.id === route.vehicle.id) : null;
-    const driverData = route.driver ? drivers.find(d => d.id === route.driver.id) : null;
-    const vehicleAlias = vehicleInfo ? (vehicleInfo.alias || vehicleInfo.marca) : 'No asignado';
-    const driverName = route.driver ? route.driver.name : 'No asignado';
-    let driverStatusHtml = '';
-    if (driverData) {
-        const { text, color } = driverStatusInfo[driverData.status] || defaultStatusInfo;
-        driverStatusHtml = `<span style="color: ${color}; margin-left: 8px;">(${text})</span>`;
-    }
 
-    // --- LÓGICA CENTRALIZADA DE ESTADOS Y COLORES ---
-    const routeStatus = route.estado;
-    const canStart = route.coords && route.coords.length >= 2;
-
-    // Reglas de negocio
-    const isEditable = routeStatus === 'pendiente'; // Solo se puede editar o eliminar en 'pendiente'
-    const isCancelable = routeStatus === 'en curso'; // Solo se puede cancelar en 'en curso'
-    const isActionable = ['pendiente', 'lista para iniciar', 'en curso'].includes(routeStatus);
-
-    // Colores base
-    const blue = '#6c8cff';
-    const green = '#2ecc71';
-    const red = '#e74c3c';
-    const grey = '#95a5a6';
-
-    // Determina colores y estados de los botones
-    const cardBorderColor = routeStatus === 'cancelada' ? red : route.color;
-    const editDeleteButtonColor = isEditable ? blue : grey;
-
-    let actionButtonColor = grey;
-    let actionButtonText = routeStatus.charAt(0).toUpperCase() + routeStatus.slice(1);
-    let actionButtonDisabled = true;
-
-    if (routeStatus === 'pendiente') {
-        actionButtonColor = blue;
-        actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
-        actionButtonDisabled = !canStart;
-    } else if (routeStatus === 'lista para iniciar') {
-        actionButtonColor = green;
-        actionButtonText = canStart ? 'Iniciar Ruta' : 'Sin coordenadas';
-        actionButtonDisabled = !canStart;
-    } else if (isCancelable) {
-        actionButtonColor = red;
-        actionButtonText = 'Cancelar Ruta';
-        actionButtonDisabled = false;
-    }
-    
-    // 4. Construye el HTML final (se eliminó el párrafo de estado duplicado)
-    routeDetail.innerHTML = `
-    <div class="route-card" style="border-left: 4px solid ${cardBorderColor}; padding: 12px;">
-        <h3>${route.name}</h3>
-        <p><strong>Estado:</strong> 
-            <span style="font-weight: bold; text-transform: capitalize;">${route.estado}</span>
-        </p>
-        <p><strong>Puntos:</strong> ${route.puntos ?? (route.coords ? route.coords.length : 0)}</p>
-        <p><strong>Vehículo:</strong> ${vehicleAlias}</p>
-        <p><strong>Chofer:</strong> ${driverName}${driverStatusHtml}</p>
-        <p><strong>Contraseña:</strong> <span id="route-password">${route.password || 'No generada'}</span>
-            ${route.password ? `
-                <button id="btn-copy-password" style="background: ${blue}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;">Copiar</button>
-            ` : ''}
-        </p>
-        <div style="margin-top:12px; display: flex; gap: 8px;">
-            <button id="btn-edit-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
-                Editar
-            </button>
-            <button id="btn-delete-route" style="background: ${editDeleteButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${!isEditable ? 'disabled' : ''}>
-                Eliminar
-            </button>
-            <button id="start-cancel-route" style="background: ${actionButtonColor}; color: #fff; border: 0; padding: 8px 12px; border-radius: 10px; cursor: pointer;" ${actionButtonDisabled ? 'disabled' : ''}>
-                ${actionButtonText}
-            </button>
-        </div>
-    </div>`;
-
-    // 5. Asigna los event listeners de forma segura para evitar duplicados
-    if (isEditable) {
-        document.getElementById('btn-edit-route').addEventListener('click', () => editRoute(route.id));
-        document.getElementById('btn-delete-route').addEventListener('click', () => deleteRoute(route.id));
-    }
-    
-    if (isActionable) {
-        document.getElementById('start-cancel-route').addEventListener('click', () => {
-            if (route.estado === 'en curso') {
-                cancelRoute(route.id);
-            } else {
-                startRoute(route.id);
-            }
-        });
-    }
-
-    const copyBtn = document.getElementById('btn-copy-password');
-    if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-            const pwd = document.getElementById('route-password')?.textContent || '';
-            if (!pwd || pwd === 'No generada') return;
-            navigator.clipboard.writeText(pwd).then(() => {
-                copyBtn.textContent = 'Copiado';
-                setTimeout(() => copyBtn.textContent = 'Copiar', 1200);
-            });
-        });
-    }
-}
-
-    // Editar ruta
+    // Editar ruta (VERSIÓN CORREGIDA #3 - A PRUEBA DE CACHÉ)
     async function editRoute(id) {
-        const route = routes.find(r => r.id === id);
-        if (!route) return alert('Ruta no encontrada para editar.');
 
+        // --- 1. OBTENER DATOS COMPLETOS DE LA RUTA ---
+        let route;
+        try {
+            // Primero, intenta obtener la ruta del caché
+            const cachedRoute = routes.find(r => r.id === id);
+
+            // Si el caché no tiene coordenadas O (ahora) no tiene isTraceFree, lo volvemos a buscar
+            if (!cachedRoute || !cachedRoute.coords || cachedRoute.isTraceFree === undefined) {
+                const res = await fetch(`/api/routes/${id}`);
+                if (!res.ok) throw new Error('Ruta no encontrada en el servidor');
+                const fullRouteData = await res.json();
+                route = normalizeRoute(fullRouteData); // Normaliza los datos frescos
+
+                // Actualiza el caché local
+                const idx = routes.findIndex(r => r.id === id);
+                if (idx !== -1) routes[idx] = route;
+            } else {
+                route = cachedRoute; // El caché es bueno, úsalo
+            }
+        } catch (err) {
+            console.error("Error al obtener detalles completos de la ruta:", err);
+            return alert('No se pudo cargar la ruta para editar.');
+        }
+
+        // --- 2. LLENA EL FORMULARIO (AHORA CON DATOS COMPLETOS) ---
         panelTitle.textContent = 'Editar ruta';
         submitButton.textContent = 'Guardar cambios';
         document.getElementById('route-id').value = route.id;
         document.getElementById('route-name').value = route.name;
         document.getElementById('route-color').value = route.color;
 
-        if (route.vehicle) {
-            routeVehicleSelect.value = route.vehicle.id;
-        } else {
-            routeVehicleSelect.value = "";
+        routeVehicleSelect.value = route.vehicle ? route.vehicle.id : "";
+        if (routeDriverSelect) {
+            routeDriverSelect.value = route.driver ? route.driver.id : "";
         }
 
-        if (route.driver && routeDriverSelect) {
-            routeDriverSelect.value = route.driver.id;
-        } else if (routeDriverSelect) {
-            routeDriverSelect.value = "";
+        // --- ESTO AHORA FUNCIONARÁ ---
+        traceFreeSwitch.checked = route.isTraceFree || false;
+        isTraceFreeMode = route.isTraceFree || false;
+        updateDrawUI(); // Actualiza los botones
+
+        // --- 3. ABRE EL PANEL ---
+        panel.classList.add('open');
+
+        // --- 4. DIBUJA EL MAPA (AHORA CON COORDENADAS) ---
+        try {
+            tempCoords = route.coords || [];
+            drawnItems.clearLayers();
+            isFinalPointSet = false; // Resetea
+
+            if (isTraceFreeMode) {
+                // Es una ruta SIN TRAZO
+                if (tempCoords.length >= 1) {
+                    L.marker(tempCoords[0], {
+                        icon: L.divIcon({ className: 'start-marker-icon', html: '<i class="fa-solid fa-location-dot" style="color:#2ecc71; font-size: 24px;"></i>' })
+                    }).addTo(drawnItems);
+                }
+                if (tempCoords.length >= 2) {
+                    L.marker(tempCoords[1], {
+                        icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>' })
+                    }).addTo(drawnItems);
+                    L.polyline(tempCoords, { color: '#6c8cff', weight: 4, dashArray: '10, 10' }).addTo(drawnItems);
+                }
+            } else if (tempCoords.length > 0) {
+                // Es una ruta CON TRAZO (normal)
+                tempPolyline = L.polyline(tempCoords, {
+                    color: route.color, weight: 5
+                }).addTo(drawnItems);
+
+                tempCoords.forEach(coord => {
+                    L.circleMarker(coord, { radius: 6, color: route.color }).addTo(drawnItems);
+                });
+
+                const lastCoord = tempCoords[tempCoords.length - 1];
+                L.marker(lastCoord, {
+                    icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>' })
+                }).addTo(drawnItems);
+
+                isFinalPointSet = true;
+            }
+
+            disableDrawing();
+
+        } catch (err) {
+            console.error("Error al dibujar la ruta para edición:", err);
+            alert("Error al cargar las coordenadas de la ruta. Revisa la consola.");
+            drawnItems.clearLayers();
+            tempCoords = [];
+            isFinalPointSet = false;
+        }
+    }
+
+    // Clonar ruta (NUEVA FUNCIÓN)
+    async function cloneRoute(id) {
+
+        // --- 1. OBTENER DATOS COMPLETOS DE LA RUTA ---
+        let route;
+        try {
+            const res = await fetch(`/api/routes/${id}`);
+            if (!res.ok) throw new Error('Ruta no encontrada en el servidor');
+            const fullRouteData = await res.json();
+            route = normalizeRoute(fullRouteData);
+        } catch (err) {
+            console.error("Error al obtener detalles completos de la ruta:", err);
+            return alert('No se pudo cargar la ruta para clonar.');
+        }
+
+        // --- 2. LLENA EL FORMULARIO (MODO CLONAR) ---
+        panelTitle.textContent = 'Clonar Ruta';
+        submitButton.textContent = 'Crear ruta'; // O 'Crear clon' si prefieres
+
+        // --- !! IMPORTANTE !! ---
+        // El ID debe estar VACÍO para forzar una CREACIÓN (POST)
+        document.getElementById('route-id').value = '';
+
+        // Añadimos "(Copia)" al nombre para diferenciarla
+        document.getElementById('route-name').value = `${route.name} (Copia)`;
+        document.getElementById('route-color').value = route.color;
+
+        routeVehicleSelect.value = route.vehicle ? route.vehicle.id : "";
+        if (routeDriverSelect) {
+            routeDriverSelect.value = route.driver ? route.driver.id : "";
         }
 
         traceFreeSwitch.checked = route.isTraceFree || false;
         isTraceFreeMode = route.isTraceFree || false;
-        updateDrawUI(); // Actualiza la UI para mostrar los botones correctos
+        updateDrawUI();
 
-        // Cargar puntos en el mapa
-        tempCoords = route.coords || [];
-        drawnItems.clearLayers();
-        tempCoords.forEach(coord => {
-            L.circleMarker(coord, {
-                radius: 6,
-                color: route.color
-            }).addTo(drawnItems);
-        });
-
+        // --- 3. ABRE EL PANEL ---
         panel.classList.add('open');
-        disableDrawing();
+
+        // --- 4. DIBUJA EL MAPA (IDÉNTICO A EDITAR) ---
+        try {
+            tempCoords = route.coords || [];
+            drawnItems.clearLayers();
+            isFinalPointSet = false;
+
+            if (isTraceFreeMode) {
+                if (tempCoords.length >= 1) {
+                    L.marker(tempCoords[0], {
+                        icon: L.divIcon({ className: 'start-marker-icon', html: '<i class="fa-solid fa-location-dot" style="color:#2ecc71; font-size: 24px;"></i>' })
+                    }).addTo(drawnItems);
+                }
+                if (tempCoords.length >= 2) {
+                    L.marker(tempCoords[1], {
+                        icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>' })
+                    }).addTo(drawnItems);
+                    L.polyline(tempCoords, { color: '#6c8cff', weight: 4, dashArray: '10, 10' }).addTo(drawnItems);
+                }
+            } else if (tempCoords.length > 0) {
+                tempPolyline = L.polyline(tempCoords, {
+                    color: route.color, weight: 5
+                }).addTo(drawnItems);
+
+                tempCoords.forEach(coord => {
+                    L.circleMarker(coord, { radius: 6, color: route.color }).addTo(drawnItems);
+                });
+
+                const lastCoord = tempCoords[tempCoords.length - 1];
+                L.marker(lastCoord, {
+                    icon: L.divIcon({ className: 'end-marker-icon', html: '<i class="fa-solid fa-flag-checkered" style="color:#d10000; font-size: 24px;"></i>' })
+                }).addTo(drawnItems);
+
+                isFinalPointSet = true;
+            }
+
+            disableDrawing();
+
+        } catch (err) {
+            console.error("Error al dibujar la ruta para clonar:", err);
+            alert("Error al cargar las coordenadas de la ruta. Revisa la consola.");
+            drawnItems.clearLayers();
+            tempCoords = [];
+            isFinalPointSet = false;
+        }
     }
 
     // Eliminar ruta

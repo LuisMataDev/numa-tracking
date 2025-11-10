@@ -400,7 +400,6 @@ function updateInfoPanel(route) {
     document.getElementById('route-id-display').textContent = route.id || 'Sin asignar';
 
     const routeTypeDisplay = document.createElement('p'); // Creamos un elemento para esto
-    routeTypeDisplay.innerHTML = `<strong>Tipo:</strong> ${route.isTraceFree ? 'Sin Trazo (Libre)' : 'Con Trazo Definido'}`;
     // Insertamos el tipo de ruta después del ID
     const routeIdEl = document.getElementById('route-id-display');
     if (routeIdEl.nextSibling) {

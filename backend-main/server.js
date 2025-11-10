@@ -223,7 +223,7 @@ vehicleSchema.set('toJSON', {
 
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 
-// Esquema para Rutas
+
 const routeSchema = new mongoose.Schema({
   name: { type: String, required: true },
   color: { type: String, default: '#3b82f6' },
@@ -232,7 +232,6 @@ const routeSchema = new mongoose.Schema({
   puntos: { type: Number },
   estado: {
     type: String,
-    // --- CAMBIO AQUÍ: Añadimos 'lista para iniciar' ---
     enum: ['pendiente', 'lista para iniciar', 'en curso', 'finalizada', 'cancelada'],
     default: 'pendiente'
   },
@@ -476,7 +475,7 @@ app.post('/api/routes', async (req, res) => {
     const rawColor = req.body.color || req.body.colorArray || req.body.color_rgb;
     const vehicle = req.body.vehicle;
     const driver = req.body.driver || null;
-    // --- 1. Recibe el nuevo campo ---
+
     const isTraceFree = req.body.isTraceFree || false;
 
     if (!name || !coords || !Array.isArray(coords) || coords.length < 2) {
@@ -484,11 +483,17 @@ app.post('/api/routes', async (req, res) => {
     }
 
     let color = '#3b82f6';
-    if (Array.isArray(rawColor)) { /* ... tu lógica de color ... */ }
+    if (typeof rawColor === 'string' && rawColor.startsWith('#')) {
+      // Si es un string hex (ej. '#f357a1') lo usamos
+      color = rawColor;
+    } else if (Array.isArray(rawColor)) {
+      // Si es un array (ej. [255, 0, 0]) lo convertimos
+      const hex = rgbArrayToHex(rawColor); // (Ya tenías esta función)
+      if (hex) color = hex;
+    }
 
     const password = (req.body.password && String(req.body.password).trim()) ? String(req.body.password).trim() : generatePassword(8);
 
-    // --- 2. Añade el campo al crear el documento ---
     const newRoute = await Route.create({ name, color, coords, vehicle, driver, password, isTraceFree });
 
     io.emit('routesUpdated', newRoute.toJSON());
@@ -547,9 +552,7 @@ app.delete('/api/routes/:id', async (req, res) => {
       return res.status(404).json({ error: 'Ruta no encontrada' });
     }
     io.emit('routesUpdated', { deletedId: req.params.id });
-    // si tenía driver, recalcular su estado asíncronamente
     if (deletedRoute.driver && deletedRoute.driver.id) {
-      // no await para no bloquear la respuesta
       computeAndSetDriverStatus(deletedRoute.driver.id).catch(e => console.error(e));
     }
     res.json({ message: 'Ruta eliminada exitosamente' });
@@ -748,7 +751,6 @@ io.on('connection', (socket) => {
 });
 
 
-// Conectar a Mongo y arrancar servidor
 async function start() {
   try {
     await mongoose.connect(MONGODB_URI);

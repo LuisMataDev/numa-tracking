@@ -1,290 +1,213 @@
+/* --- 1. Variables de tu archivo styles.css --- */
 :root {
-    --bg: #f5f7fb;
-    --surface: #ffffff;
-    --muted: #64748b;
-    --text: #0f1724;
-    --accent: #6c8cff;
-    --accent-2: #f357a1;
-    --glass: rgba(15, 23, 36, 0.03);
-    --shadow: 0 12px 30px rgba(12, 20, 33, 0.06);
-    --radius: 14px;
-    --gap: 14px;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --muted: #64748b;
+  --text: #0f1724;
+  --sidebar-bg: linear-gradient(180deg, #0b1228 0%, #0f1b36 100%);
+  --accent: #6c8cff;
+  --glass: rgba(255, 255, 255, 0.06);
+  --shadow: 0 6px 18px rgba(12, 20, 33, 0.08);
+  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --gap: 18px;
+  font-synthesis: none;
 }
 
-/* Base */
 * {
-    box-sizing: border-box
+  box-sizing: border-box;
 }
 
 html,
 body {
-    height: 100%;
-    margin: 0;
-    background: url("../html/img/fondo2.png");
-    width: 100%;
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    
+  height: 100%;
 }
+
+body {
+  margin: 0;
+  /* Usamos la fuente de tu archivo de estilos */
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+}
+
+/* --- 2. Estructura de dos paneles --- */
+.login-container {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
+
+/* Panel izquierdo (Formulario) */
+.form-panel {
+  flex: 1; /* Ocupa el 50% (o más, si el panel de imagen tiene flex-basis) */
+  /* Este es el color de fondo que pediste */
+  background-color: var(--bg); 
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  overflow-y: auto; /* Permite scroll si el formulario es muy alto */
+}
+
+/* Panel derecho (Imagen) */
+.image-panel {
+  flex: 1; /* Ocupa el 50% */
+  
+  /* --- ¡IMPORTANTE! Cambia esta URL por la de tu imagen --- */
+  background-image: url('../html/img/fondo2.png');
+  /* O puedes usar el gradiente de tu sidebar si lo prefieres */
+  /* background: var(--sidebar-bg); */
+  
+  background-size: cover;
+  background-position: center;
+
+  box-shadow: #000;
+}
+
+/* --- 3. Estilos para tu formulario (usando tus variables) --- */
 
 .wrap {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    gap: 18px
+  width: 100%;
+  max-width: 450px;
 }
 
-/* Brand header */
 .brand {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-    margin-bottom: 6px
+  text-align: center;
+  margin-bottom: 1.5rem;
 }
-
-header{
-    background-color: #0f172480;
-    padding: 1% 5%;
-    border-radius: 10px;
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.192);
-    
+.brand img {
+  width: 60px;
+  height: auto;
 }
-
-.logo img{
-    width: 56px;
-    height: 56px;
-}
-
 .brand h1 {
-    margin: 0;
-    font-size: 20px
+  margin: 0.5rem 0 0.25rem;
+  font-size: 1.75rem;
+  color: var(--text);
 }
 
-.brand .muted {
-    margin: 0;
-    color: #fff;
-    font-size: 13px
+/* Usamos tus colores --muted */
+.muted, .hint, .small.muted {
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
-/* Card (form) */
+/* Estilos para la tarjeta del formulario */
 .card {
-    
-    width: 100%;
-    max-width: 420px;
-    background-color: #0f172480;
-    color: #fff;
-    border-radius: var(--radius);
-    padding: 18px;
-    box-shadow: var(--shadow);
-    border: 1px solid rgb(255, 255, 255);
-    display: flex;
-    flex-direction: column;
-    gap: 12px
+  background: var(--surface);
+  border-radius: var(--radius-lg); /* Usamos tu radio grande */
+  box-shadow: var(--shadow);
+  padding: 2.5rem; /* Un poco más de padding */
 }
 
+h2#login-title {
+  color: var(--text);
+}
+
+/* Estilos de los campos del formulario */
 .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px
-    
+  margin-bottom: 1.25rem;
 }
-
 .field label {
-    font-size: 13px;
-    color: #fff;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .3px
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text);
 }
 
-.field input[type="email"],
-.field input[type="password"] {
-    padding: 12px 12px;
-    border-radius: 10px;
-    border: 1px solid rgba(255, 255, 255, 0.247);
-    font-size: 15px;
-    outline: none;
-    background: transparent;
-    color: #fff;
-}
-
-.field input::placeholder {
-    color: rgba(255, 255, 255, 0.507)
-}
-
-/* password wrapper */
 .pw-wrap {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    color: #fff;
-    
+  position: relative;
+  display: flex;
 }
 
-.pw-wrap input {
-    flex: 1
-}
+.pw-wrap input { flex: 1; }
 
 .icon-btn {
-    width: 44px;
-    height: 44px;
-    border-radius: 10px;
-    border: 0;
-    background: #ffffff3f;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
-    box-shadow: 0 6px 14px rgba(12, 20, 33, 0.04);
-    cursor: pointer
+  position: absolute;
+  right: 1px;
+  top: 1px;
+  bottom: 1px;
+  background: transparent;
+  border: none;
+  padding: 0 0.75rem;
+  cursor: pointer;
+  color: var(--muted);
+}
+.icon-btn:hover { color: var(--text); }
+
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #cbd5e1; /* Un borde sutil */
+  border-radius: var(--radius-sm); /* Usamos tu radio pequeño */
+  box-sizing: border-box;
+  font-size: 1rem;
+  background: #fdfdff; /* Ligeramente diferente al fondo */
+}
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
 }
 
-/* Row between */
-.row-between {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px
+
+.card-footer {
+  margin-top: 1.5rem;
 }
 
-.checkbox {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    color: var(--muted);
-    user-select: none
-}
-
-.checkbox input {
-    width: 16px;
-    height: 16px
-}
-
-/* Buttons */
 .btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 0;
-    font-weight: 800;
-    background: #ffffff3f;
-    color: #fff;
-    cursor: pointer;
-    box-shadow: 0 10px 28px rgba(108, 140, 255, 0.12)
+  width: 100%;
+  padding: 0.85rem;
+  background: var(--sidebar-bg); /* Usamos tu color de acento */
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+.btn-primary:hover {
+  background: linear-gradient(180deg, #121d41 0%, #1d3366 100%);
+  box-shadow: 0 4px 12px rgba(108, 140, 255, 0.3);
 }
 
-.btn-primary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed
+.small.muted {
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.small.muted:hover {
+  text-decoration: underline;
+  color: var(--accent);
 }
 
-.btn-ghost {
-    background: transparent;
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(15, 23, 36, 0.06);
-    color: var(--muted);
-    font-weight: 700;
-    cursor: pointer
-}
+/* --- 4. Responsive Design (Móvil) --- */
 
-/* separation */
-.sep {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 6px 0
-}
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column; /* Apila los paneles verticalmente */
+  }
 
-.sep::before,
-.sep::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: rgba(15, 23, 36, 0.03)
-}
+  /* Ocultamos el panel de la imagen en móviles */
+  .image-panel {
+    display: none; 
+  }
 
-.sep span {
-    display: inline-block;
-    padding: 0 8px;
-    color: var(--muted);
-    font-weight: 700;
-    border-radius: 999px
-}
-
-/* Socials */
-.socials {
-    display: flex;
-    gap: 10px
-}
-
-.social {
-    flex: 1;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center
-}
-
-/* minor text / footer */
-.muted {
-    color: #fff;
-}
-
-.small {
-    font-size: 13px
-}
-
-.center {
-    text-align: center
-}
-
-/* error messages */
-.error {
-    color: #ef4444;
-    font-size: 13px;
-    height: 18px
-}
-
-/* toast */
-.toast {
-    position: fixed;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: 26px;
-    background: var(--surface);
-    padding: 10px 14px;
-    border-radius: 12px;
-    border: 1px solid rgba(15, 23, 36, 0.04);
-    box-shadow: 0 8px 24px rgba(12, 20, 33, 0.06);
-    color: var(--muted);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .2s
-}
-
-.toast.show {
-    opacity: 1;
-    pointer-events: auto
-}
-
-/* responsive tweaks */
-@media(min-width:700px) {
-    .wrap {
-        padding: 36px
-    }
-
-    .card {
-        padding: 22px;
-        gap: 16px
-    }
+  .form-panel {
+    flex-basis: 100%;
+    height: 100vh;
+    align-items: flex-start; /* Alinea arriba en móvil */
+    padding-top: 4rem;
+  }
+  
+  .card {
+     box-shadow: none; /* Quitamos sombra en móvil */
+  }
 }
