@@ -133,32 +133,39 @@ async function initMap() {
         // 2. Agrega un "escuchador" de clics
         logoutButton.addEventListener('click', async (event) => {
             // Previene que el navegador salte al hash #sing-out
-            event.preventDefault(); 
+            event.preventDefault();
 
-            try {
-                // 3. Envía la petición POST a tu API
-                const response = await fetch('/api/admin/logout', {
-                    method: 'POST'
-                });
+            // --- INICIO DEL CAMBIO ---
+            // 3. Muestra la confirmación nativa
+            const wantsToLogout = window.confirm("¿Estás seguro de que deseas cerrar la sesión?");
 
-                if (response.ok) {
-                    // 4. Si el servidor dice OK, redirige al login
-                    console.log('Sesión cerrada exitosamente.');
-                    // ¡IMPORTANTE! Cambia 'login.html' por la ruta real de tu login
-                    window.location.href = 'login.html'; 
-                } else {
-                    // Maneja un posible error del servidor
-                    alert('Error al intentar cerrar la sesión.');
+            // 4. Solo continúa si el usuario hizo clic en "Aceptar"
+            if (wantsToLogout) {
+                try {
+                    // 5. Envía la petición POST a tu API
+                    const response = await fetch('/api/admin/logout', {
+                        method: 'POST'
+                    });
+
+                    if (response.ok) {
+                        // 6. Si el servidor dice OK, redirige al login
+                        console.log('Sesión cerrada exitosamente.');
+                        window.location.href = 'login.html';
+                    } else {
+                        // Maneja un posible error del servidor
+                        alert('Error al intentar cerrar la sesión.');
+                    }
+                } catch (error) {
+                    // Maneja errores de red
+                    console.error('Error de red:', error);
+                    alert('Error de red al intentar cerrar la sesión.');
                 }
-            } catch (error) {
-                // Maneja errores de red
-                console.error('Error de red:', error);
-                alert('Error de red al intentar cerrar la sesión.');
             }
+            // Si el usuario presiona "Cancelar", no se hace nada.
+            // --- FIN DEL CAMBIO ---
         });
     }
 });
-
 async function fetchDrivers() {
     try {
         const res = await fetch('/api/drivers');
