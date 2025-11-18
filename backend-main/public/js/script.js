@@ -43,40 +43,6 @@ async function initMap() {
 
     socket = io();
 
-    document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. Encuentra el enlace para "Cerrar sesión"
-    const logoutButton = document.querySelector('a[href="#sing-out"]');
-
-    if (logoutButton) {
-        // 2. Agrega un "escuchador" de clics
-        logoutButton.addEventListener('click', async (event) => {
-            // Previene que el navegador salte al hash #sing-out
-            event.preventDefault(); 
-
-            try {
-                // 3. Envía la petición POST a tu API
-                const response = await fetch('/api/admin/logout', {
-                    method: 'POST'
-                });
-
-                if (response.ok) {
-                    // 4. Si el servidor dice OK, redirige al login
-                    console.log('Sesión cerrada exitosamente.');
-                    // ¡IMPORTANTE! Cambia 'login.html' por la ruta real de tu login
-                    window.location.href = 'login.html'; 
-                } else {
-                    // Maneja un posible error del servidor
-                    alert('Error al intentar cerrar la sesión.');
-                }
-            } catch (error) {
-                // Maneja errores de red
-                console.error('Error de red:', error);
-                alert('Error de red al intentar cerrar la sesión.');
-            }
-        });
-    }
-});
 
     // --- MANEJADORES DE EVENTOS DE SOCKET ---
     socket.on('locationUpdate', (data) => {
@@ -157,6 +123,41 @@ async function initMap() {
 
     await updateAll();
 }
+
+ document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. Encuentra el enlace para "Cerrar sesión"
+    const logoutButton = document.querySelector('a[href="#sing-out"]');
+
+    if (logoutButton) {
+        // 2. Agrega un "escuchador" de clics
+        logoutButton.addEventListener('click', async (event) => {
+            // Previene que el navegador salte al hash #sing-out
+            event.preventDefault(); 
+
+            try {
+                // 3. Envía la petición POST a tu API
+                const response = await fetch('/api/admin/logout', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // 4. Si el servidor dice OK, redirige al login
+                    console.log('Sesión cerrada exitosamente.');
+                    // ¡IMPORTANTE! Cambia 'login.html' por la ruta real de tu login
+                    window.location.href = 'login.html'; 
+                } else {
+                    // Maneja un posible error del servidor
+                    alert('Error al intentar cerrar la sesión.');
+                }
+            } catch (error) {
+                // Maneja errores de red
+                console.error('Error de red:', error);
+                alert('Error de red al intentar cerrar la sesión.');
+            }
+        });
+    }
+});
 
 async function fetchDrivers() {
     try {
