@@ -19,9 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
         contentArea: document.querySelector('.pdf-preview-page')
     };
 
-     document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. Encuentra el enlace para "Cerrar sesión"
     const logoutButton = document.querySelector('a[href="#sing-out"]');
 
     if (logoutButton) {
@@ -60,7 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
             // --- FIN DEL CAMBIO ---
         });
     }
-});
 
     // --- 2. ESTADO DE LA APLICACIÓN ---
     let state = {
@@ -75,13 +71,13 @@ document.addEventListener('DOMContentLoaded', () => {
  * Muestra un loader de tipo "skeleton" en la cuadrícula de resultados de reportes.
  * @param {number} count - El número de esqueletos a mostrar.
  */
-function showReportSkeletonLoader(count = 6) {
-    resultsGrid.innerHTML = ''; // Limpia la cuadrícula
+    function showReportSkeletonLoader(count = 6) {
+        resultsGrid.innerHTML = ''; // Limpia la cuadrícula
 
-    for (let i = 0; i < count; i++) {
-        const card = document.createElement('div');
-        card.className = 'skeleton-report-card'; // Usamos la nueva clase
-        card.innerHTML = `
+        for (let i = 0; i < count; i++) {
+            const card = document.createElement('div');
+            card.className = 'skeleton-report-card'; // Usamos la nueva clase
+            card.innerHTML = `
             <div class="skeleton-header">
                 <div class="skeleton-text title"></div>
                 <div class="skeleton-text meta"></div>
@@ -95,9 +91,9 @@ function showReportSkeletonLoader(count = 6) {
                 <div class="skeleton-button"></div>
             </div>
         `;
-        resultsGrid.appendChild(card);
+            resultsGrid.appendChild(card);
+        }
     }
-}
 
     // --- 3. CARGA DE DATOS INICIAL ---
     async function fetchData() {
@@ -108,10 +104,10 @@ function showReportSkeletonLoader(count = 6) {
                 fetch('/api/drivers'),
                 fetch('/api/vehicles')
             ]);
-            
+
             const allRoutes = await routesRes.json();
             state.routes = allRoutes.filter(route => route.estado === 'finalizada');
-            
+
             state.drivers = await driversRes.json();
             state.vehicles = await vehiclesRes.json();
 
@@ -125,12 +121,12 @@ function showReportSkeletonLoader(count = 6) {
             resultsGrid.innerHTML = `<p class="empty-state">No se pudieron cargar los datos del servidor.</p>`;
         }
     }
-    
+
     // --- 4. LÓGICA DE FILTRADO ---
     function filterAndRender() {
         let result = [...state.routes];
         const now = new Date();
-        
+
         if (state.activeDateFilter === 'day') {
             const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
             result = result.filter(route => new Date(route.updatedAt) >= startOfToday);
@@ -140,8 +136,8 @@ function showReportSkeletonLoader(count = 6) {
             const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1));
             result = result.filter(route => new Date(route.updatedAt) >= startOfWeek);
             reportTitle.textContent = 'Reporte de la Semana';
-        
-        // --- BLOQUE DE FILTRO POR MES MEJORADO ---
+
+            // --- BLOQUE DE FILTRO POR MES MEJORADO ---
         } else if (state.activeDateFilter === 'month') {
             const monthValue = filters.monthInput.value;
             if (monthValue) {
@@ -153,7 +149,7 @@ function showReportSkeletonLoader(count = 6) {
                     const routeDate = new Date(route.updatedAt);
                     return routeDate >= startDate && routeDate < endDate;
                 });
-                
+
                 const monthName = startDate.toLocaleString('es-ES', { month: 'long' });
                 reportTitle.textContent = `Reporte de ${monthName.charAt(0).toUpperCase() + monthName.slice(1)} ${year}`;
             }
@@ -168,11 +164,11 @@ function showReportSkeletonLoader(count = 6) {
                 result = result.filter(route => route.vehicle && route.vehicle.id === filterValue);
             }
         }
-        
+
         state.filteredRoutes = result;
         renderResults(result);
     }
-    
+
     // --- 5. LÓGICA DE RENDERIZADO (sin cambios) ---
     function populateFilterValues() {
         const filterType = filters.type.value;
@@ -281,7 +277,7 @@ function showReportSkeletonLoader(count = 6) {
         };
         html2pdf().set(opt).from(element).save();
     }
-    
+
     // --- 7. INICIALIZACIÓN (EVENT LISTENERS) ---
     // NUEVA FUNCIÓN para establecer el mes actual
     function setDefaultMonth() {
@@ -315,7 +311,7 @@ function showReportSkeletonLoader(count = 6) {
         filterAndRender();
     });
     filters.value.addEventListener('change', filterAndRender);
-    
+
     previewButton.addEventListener('click', showPdfPreview);
     modal.closeButton.addEventListener('click', closePdfModal);
     modal.overlay.addEventListener('click', closePdfModal);

@@ -50,9 +50,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const defaultCoords = [19.7677724, -104.3686507]; // Ubicación por si las moscas
 
-     document.addEventListener('DOMContentLoaded', () => {
-
-    // 1. Encuentra el enlace para "Cerrar sesión"
     const logoutButton = document.querySelector('a[href="#sing-out"]');
 
     if (logoutButton) {
@@ -91,7 +88,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             // --- FIN DEL CAMBIO ---
         });
     }
-});
 
     btnToggleFilters.addEventListener('click', () => {
         filterPopup.classList.toggle('hidden');
