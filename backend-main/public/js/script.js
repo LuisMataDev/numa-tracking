@@ -124,7 +124,7 @@ async function initMap() {
     await updateAll();
 }
 
- document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
 
     // 1. Encuentra el enlace para "Cerrar sesión"
     const logoutButton = document.querySelector('a[href="#sing-out"]');
@@ -345,7 +345,7 @@ async function fetchAndDrawRoutes() {
     }
 }
 
-let vehiculoSeleccionado = null; 
+let vehiculoSeleccionado = null;
 
 // Suponemos que tienes una función que se ejecuta cuando se hace clic en un marcador de vehículo en el mapa
 // Esta función DEBE actualizar la variable `vehiculoSeleccionado`.
@@ -353,7 +353,7 @@ let vehiculoSeleccionado = null;
 function onVehiculoClick(vehiculoInfo) {
     console.log("Vehículo seleccionado:", vehiculoInfo);
     vehiculoSeleccionado = vehiculoInfo;
-    
+
     // Opcional: Resalta el botón de servicios para indicar que se puede usar
     document.querySelector('.btn-services').style.border = '2px solid #3498db';
 }
@@ -382,15 +382,15 @@ btnServices.addEventListener('click', () => {
 servicesMenu.addEventListener('click', (event) => {
     // Usamos delegación de eventos para no añadir un listener a cada botón
     const targetButton = event.target.closest('.service-option');
-    
+
     if (targetButton) {
         const servicio = targetButton.dataset.service;
-        
+
         console.log(`Solicitando servicio de '${servicio}' para el vehículo '${vehiculoSeleccionado.id}'`);
-        
+
         // Llama a la función que enviará los datos al servidor
         enviarSolicitudDeServicio(servicio, vehiculoSeleccionado);
-        
+
         // Oculta el menú después de seleccionar una opción
         servicesMenu.style.display = 'none';
     }

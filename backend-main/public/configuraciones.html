@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuraciones | NUMA Móvil</title>
+    
+    <!-- Reutilizamos tus estilos base si los tienes en un main.css, o usamos este específico -->
+    <link rel="stylesheet" href="./css/configuraciones.css" />
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <link rel="icon" type="image/png" sizes="16x16" href="html/img/logo.png">
+</head>
+
+<body>
+    <!-- SIDEBAR (Idéntico al de rutas, pero con la clase active en Configuraciones) -->
+    <nav id="sidebar">
+        <ul>
+            <li><a href="index.html"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
+            <li><a href="routes.html"><i class="fa-solid fa-route"></i><span>Rutas</span></a></li>
+            <li><a href="vehiculos.html"><i class="fa-solid fa-truck"></i><span>Vehículos</span></a></li>
+            <li><a href="choferes.html"><i class="fa-solid fa-user"></i></i><span>Choferes</span></a></li>
+            <li><a href="reportes.html"><i class="fa-solid fa-file-alt"></i><span>Reportes</span></a></li>
+            <!-- Clase active aquí -->
+            <li><a href="config.html" class="active"><i class="fa fa-cog"></i><span>Configuraciones</span></a></li>
+            <li><a href="#info"><i class="fa fa-info-circle"></i><span>Información</span></a></li>
+            <li><a href="#sing-out"><i class="fa fa-sign-out"></i><span>Cerrar sesión</span></a></li>
+        </ul>
+    </nav>
+
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main class="settings-container">
+        
+        <!-- PANEL IZQUIERDO: MENÚ DE OPCIONES -->
+        <aside class="settings-nav">
+            <header>
+                <div class="logo-container">
+                    <h1>Configuración</h1>
+                    <p class="muted">SISTEMA</p>
+                </div>
+            </header>
+
+            <ul class="settings-list">
+                <!-- Opción: Base (Activa por defecto) -->
+                <li class="settings-item active" data-target="base">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-map-location-dot"></i>
+                    </div>
+                    <div class="item-info">
+                        <h3>Base Operativa</h3>
+                        <small>Ubicación central y coordenadas</small>
+                    </div>
+                    <i class="fa-solid fa-chevron-right arrow"></i>
+                </li>
+
+                <!-- Opción: Servicios -->
+                <li class="settings-item" data-target="servicios">
+                    <div class="icon-box">
+                        <i class="fa-solid fa-server"></i>
+                    </div>
+                    <div class="item-info">
+                        <h3>Servicios</h3>
+                        <small>Conexiones y APIs</small>
+                    </div>
+                    <i class="fa-solid fa-chevron-right arrow"></i>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- PANEL DERECHO: CONTENIDO DINÁMICO -->
+        <section class="settings-content">
+            
+            <!-- VISTA: CONFIGURACIÓN DE BASE -->
+            <div id="view-base" class="settings-view active">
+                <div class="view-header">
+                    <h2>Configurar Base Operativa</h2>
+                    <p>Define el punto de partida predeterminado para los mapas de la aplicación.</p>
+                </div>
+
+                <form id="form-base-config">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="base-name">Nombre de la Base</label>
+                            <input type="text" id="base-name" placeholder="Ej: Central de Abastos" value="Base Principal">
+                        </div>
+                        <div class="form-group">
+                            <label for="base-address">Dirección (Referencia)</label>
+                            <input type="text" id="base-address" placeholder="Calle, Número, Colonia...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="base-lat">Latitud</label>
+                            <input type="text" id="base-lat" readonly placeholder="Selecciona en el mapa">
+                        </div>
+                        <div class="form-group">
+                            <label for="base-lng">Longitud</label>
+                            <input type="text" id="base-lng" readonly placeholder="Selecciona en el mapa">
+                        </div>
+                    </div>
+
+                    <div class="map-helper-text">
+                        <i class="fa-solid fa-info-circle"></i> Arrastra el marcador rojo para definir la ubicación exacta de la base.
+                    </div>
+
+                    <!-- CONTENEDOR DEL MAPA -->
+                    <div id="base-map" class="config-map"></div>
+
+                    <div class="form-actions">
+                        <button type="button" id="btn-detect-location" class="btn-secondary">
+                            <i class="fa-solid fa-crosshairs"></i> Usar mi ubicación actual
+                        </button>
+                        <button type="submit" id="btn-save-base" class="btn-primary">
+                            <i class="fa-solid fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- VISTA: SERVICIOS (Oculta por defecto) -->
+            <div id="view-servicios" class="settings-view hidden">
+                <div class="view-header">
+                    <h2>Servicios y Conexiones</h2>
+                    <p>Configuración de endpoints y servicios externos.</p>
+                </div>
+                <div class="empty-state">
+                    <i class="fa-solid fa-plug"></i>
+                    <h3>Próximamente</h3>
+                    <p>Aquí podrás configurar las claves de API y servicios externos.</p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <!-- Tu script JS irá aquí luego -->
+    <script src="./js/config.js"></script> 
+</body>
+</html>

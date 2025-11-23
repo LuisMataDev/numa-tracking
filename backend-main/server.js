@@ -142,6 +142,53 @@ function isAuthenticated(req, res, next) {
 }
 // --- Schemas de la base de datos ---
 
+// 1. Obtener configuración (GET)
+app.get('/api/admin/config', async (req, res) => {
+  try {
+    // Buscamos al admin por el ID guardado en la sesión
+    const admin = await SuperAdmin.findById(req.session.adminId);
+    if (!admin) {
+      return res.status(404).json({ error: 'Administrador no encontrado' });
+    }
+    // Devolvemos solo la config
+    res.json(admin.baseConfig || {}); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al obtener configuración' });
+  }
+});
+
+// 2. Guardar configuración (PUT)
+app.put('/api/admin/config', async (req, res) => {
+  try {
+    const { lat, lng, name, address } = req.body;
+
+    // Validamos datos básicos
+    if (lat === undefined || lng === undefined) {
+      return res.status(400).json({ error: 'Latitud y Longitud requeridas' });
+    }
+
+    // Actualizamos solo el campo baseConfig
+    const updatedAdmin = await SuperAdmin.findByIdAndUpdate(
+      req.session.adminId,
+      {
+        baseConfig: {
+          lat: parseFloat(lat),
+          lng: parseFloat(lng),
+          name: name || 'Base Operativa',
+          address: address || ''
+        }
+      },
+      { new: true } // Para devolver el objeto actualizado (opcional)
+    );
+
+    res.json({ message: 'Configuración guardada', baseConfig: updatedAdmin.baseConfig });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al guardar configuración' });
+  }
+});
+
 const superAdminSchema = new mongoose.Schema({
   email: {
     type: String,
@@ -150,7 +197,15 @@ const superAdminSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
-  password: { type: String, required: true }
+  password: { type: String, required: true },
+  // --- CAMBIO: Agregamos el campo de configuración ---
+  baseConfig: {
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+    name: { type: String, default: '' },
+    address: { type: String, default: '' }
+  }
+  // --------------------------------------------------
 }, { timestamps: true });
 
 // Hook para hashear la contraseña ANTES de guardarla
@@ -484,11 +539,11 @@ app.post('/api/routes', async (req, res) => {
 
     let color = '#3b82f6';
     if (typeof rawColor === 'string' && rawColor.startsWith('#')) {
-      // Si es un string hex (ej. '#f357a1') lo usamos
+      
       color = rawColor;
     } else if (Array.isArray(rawColor)) {
-      // Si es un array (ej. [255, 0, 0]) lo convertimos
-      const hex = rgbArrayToHex(rawColor); // (Ya tenías esta función)
+      
+      const hex = rgbArrayToHex(rawColor); 
       if (hex) color = hex;
     }
 

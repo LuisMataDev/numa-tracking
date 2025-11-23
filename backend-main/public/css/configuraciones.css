@@ -1,0 +1,247 @@
+
+:root {
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --muted: #64748b;
+  --text: #0f1724;
+  --sidebar-bg: linear-gradient(180deg, #0b1228 0%, #0f1b36 100%);
+  --accent: #6c8cff;
+  --accent-hover: #5a75d6;
+  --accent-2: #f357a1;
+  --border: rgba(15, 23, 36, 0.1);
+  --shadow: 0 6px 18px rgba(12, 20, 33, 0.06);
+  --radius-lg: 14px;
+  --radius-sm: 8px;
+  --gap: 18px;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+* { box-sizing: border-box; }
+
+/* ---------------- REUTILIZACIÓN SIDEBAR ---------------- */
+/* (Copia exacta de styles del sidebar de routes.css para mantener consistencia) */
+#sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: 76px; background: var(--sidebar-bg); color: #fff;
+  display: flex; align-items: flex-start; padding: 18px 8px;
+  transition: width .28s cubic-bezier(.2, .9, .3, 1); z-index: 1001;
+  overflow: hidden;
+}
+#sidebar ul { list-style: none; padding: 0; margin: 0; width: 100%; }
+#sidebar li { margin: 8px 0; padding-bottom: 70px;} /* Espacio entre items */
+#sidebar a {
+  display: flex; align-items: center; gap: 14px; text-decoration: none;
+  color: inherit; padding: 10px 12px; border-radius: 10px;
+  transition: background .18s; width: 100%;
+}
+#sidebar a i { font-size: 18px; width: 22px; text-align: center; }
+#sidebar a span { opacity: 0; white-space: nowrap; font-weight: 600; transition: opacity .2s; }
+#sidebar a:hover { background: rgba(255,255,255,0.08); }
+#sidebar a.active { box-shadow: inset 4px 0 0 0 var(--accent); background: rgba(255,255,255,0.05); }
+#sidebar:hover { width: 240px; }
+#sidebar:hover a span { opacity: 1; }
+
+/* ---------------- LAYOUT PRINCIPAL ---------------- */
+.settings-container {
+  margin-left: 76px; /* Ancho del sidebar colapsado */
+  width: calc(100% - 76px);
+  padding: 26px;
+  display: flex;
+  gap: var(--gap);
+  height: 100vh; /* Ocupar toda la altura */
+  overflow: hidden; /* El scroll interno lo manejan los paneles */
+}
+
+/* ---------------- PANEL IZQUIERDO (NAV) ---------------- */
+.settings-nav {
+  flex: 0 0 320px; /* Ancho fijo */
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  height: 100%;
+}
+
+.settings-nav header {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.settings-nav h1 { font-size: 20px; margin: 0; }
+.settings-nav .muted { font-size: 12px; margin-top: 4px; color: var(--muted); letter-spacing: 1px; }
+
+.settings-list {
+  list-style: none; padding: 0; margin: 0;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+.settings-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.settings-item:hover {
+  background: #f8faff;
+}
+
+.settings-item.active {
+  background: linear-gradient(90deg, rgba(108, 140, 255, 0.1), rgba(255, 255, 255, 0));
+  border-color: rgba(108, 140, 255, 0.2);
+}
+
+.icon-box {
+  width: 40px; height: 40px;
+  background: #eceff5; color: var(--muted);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  transition: all 0.2s;
+}
+
+.settings-item.active .icon-box {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 10px rgba(108, 140, 255, 0.3);
+}
+
+.item-info { flex: 1; }
+.item-info h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.item-info small { font-size: 12px; color: var(--muted); }
+
+.arrow { font-size: 12px; color: #cbd5e1; }
+.settings-item.active .arrow { color: var(--accent); }
+
+
+/* ---------------- PANEL DERECHO (CONTENT) ---------------- */
+.settings-content {
+  flex: 1;
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 30px;
+  overflow-y: auto; /* Scroll si el contenido es largo */
+  position: relative;
+}
+
+.settings-view {
+  display: none; /* Oculto por defecto */
+  animation: fadeIn 0.3s ease-out;
+}
+
+.settings-view.active { display: block; }
+.settings-view.hidden { display: none; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.view-header { margin-bottom: 25px; }
+.view-header h2 { margin: 0 0 8px 0; font-size: 22px; }
+.view-header p { margin: 0; color: var(--muted); }
+
+/* ---------------- FORMULARIOS Y MAPA ---------------- */
+.form-row {
+  display: flex; gap: 20px; margin-bottom: 15px;
+}
+
+.form-group { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+label { font-size: 13px; font-weight: 600; color: var(--muted); }
+
+input[type="text"] {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #dde1e6;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+  background: #fbfcff;
+}
+
+input[type="text"]:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(108, 140, 255, 0.1);
+}
+
+input[readonly] { background: #eee; cursor: not-allowed; color: #777; }
+
+.map-helper-text {
+  background: #eff6ff; color: #1e40af;
+  padding: 10px 14px; border-radius: 8px;
+  font-size: 13px; margin-bottom: 15px;
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid #dbeafe;
+}
+
+.config-map {
+  width: 100%;
+  height: 400px; /* Altura suficiente para navegar */
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+  z-index: 1;
+}
+
+.form-actions {
+  display: flex; justify-content: flex-end; gap: 12px;
+  padding-top: 20px; border-top: 1px solid var(--border);
+}
+
+.btn-primary {
+  background: var(--accent); color: white;
+  border: none; padding: 10px 20px;
+  border-radius: 8px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+  box-shadow: 0 4px 12px rgba(108, 140, 255, 0.2);
+  transition: transform 0.1s;
+}
+
+.btn-secondary {
+  background: white; color: var(--muted);
+  border: 1px solid #dde1e6; padding: 10px 16px;
+  border-radius: 8px; font-weight: 600; cursor: pointer;
+  display: flex; align-items: center; gap: 8px;
+}
+
+.btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+.btn-secondary:hover { background: #f8f9fa; border-color: #ccc; color: var(--text); }
+
+/* Estado vacío para Servicios */
+.empty-state {
+  text-align: center; padding: 60px 20px;
+  color: var(--muted);
+}
+.empty-state i { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+/* ---------------- RESPONSIVE ---------------- */
+@media (max-width: 768px) {
+  .settings-container {
+    flex-direction: column;
+    margin-left: 0; width: 100%;
+    padding: 15px;
+    height: auto; overflow: visible;
+    margin-top: 70px; /* Espacio para barra superior si la tienes en móvil */
+  }
+
+  .settings-nav { flex: none; width: 100%; margin-bottom: 20px; }
+  .settings-content { width: 100%; }
+  
+  .form-row { flex-direction: column; gap: 15px; }
+  .config-map { height: 300px; }
+}

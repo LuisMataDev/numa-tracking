@@ -995,31 +995,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             return alert('No se pudo cargar la ruta para clonar.');
         }
 
-        // --- 2. LLENA EL FORMULARIO (MODO CLONAR) ---
+        
         panelTitle.textContent = 'Clonar Ruta';
-        submitButton.textContent = 'Crear ruta'; // O 'Crear clon' si prefieres
+        submitButton.textContent = 'Crear ruta'; 
 
-        // --- !! IMPORTANTE !! ---
-        // El ID debe estar VACÍO para forzar una CREACIÓN (POST)
         document.getElementById('route-id').value = '';
-
-        // Añadimos "(Copia)" al nombre para diferenciarla
         document.getElementById('route-name').value = `${route.name} (Copia)`;
         document.getElementById('route-color').value = route.color;
-
         routeVehicleSelect.value = route.vehicle ? route.vehicle.id : "";
         if (routeDriverSelect) {
             routeDriverSelect.value = route.driver ? route.driver.id : "";
         }
-
         traceFreeSwitch.checked = route.isTraceFree || false;
         isTraceFreeMode = route.isTraceFree || false;
         updateDrawUI();
-
-        // --- 3. ABRE EL PANEL ---
         panel.classList.add('open');
-
-        // --- 4. DIBUJA EL MAPA (IDÉNTICO A EDITAR) ---
         try {
             tempCoords = route.coords || [];
             drawnItems.clearLayers();
