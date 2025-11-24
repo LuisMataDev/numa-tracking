@@ -162,40 +162,56 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Inicializa el mapa con la vista por defecto. Se moverá si la geolocalización tiene éxito.
-    const drawMap = L.map('draw-map').setView(defaultCoords, 13);
+    const drawMap = L.map('draw-map'); 
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(drawMap);
 
+    // --- 2. LOGICA DE BASE OPERATIVA (Reemplaza a Geolocation) ---
+    try {
+        const res = await fetch('/api/admin/config');
+        
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Validar si existen coordenadas
+            if (config && config.lat && config.lng) {
+                const baseLat = parseFloat(config.lat);
+                const baseLng = parseFloat(config.lng);
 
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
+                // A. Centrar mapa en la base
+                drawMap.setView([baseLat, baseLng], 15);
 
-                const userLat = position.coords.latitude;
-                const userLng = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
+                // B. Icono de Base (Distinto al de inicio/fin de ruta)
+                const baseIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-violet.png', // Usamos violeta para diferenciar de la ruta
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
 
-                drawMap.setView([userLat, userLng], 16); // Zoom
-
-                // Dibuja el círculo de precisión
-                L.circle([userLat, userLng], { radius: accuracy }).addTo(drawMap);
-
-
-                L.marker([userLat, userLng])
+                L.marker([baseLat, baseLng], { icon: baseIcon })
                     .addTo(drawMap)
-                    .bindPopup(`<b>Tu ubicación (precisión: ${Math.round(accuracy)}m)</b>`)
+                    .bindPopup(`<b>Base Operativa</b><br>${config.address || 'Punto de partida'}`)
                     .openPopup();
-            },
-            (error) => {
 
-                console.warn(`Error de geolocalización (${error.code}): ${error.message}`);
-
-            },
-            { enableHighAccuracy: true }
-        );
-    } else {
-        console.error('Geolocalización no disponible en este navegador.');
+            } else {
+                throw new Error('Configuración vacía');
+            }
+        } else {
+            throw new Error('Error al consultar API');
+        }
+    } catch (err) {
+        console.warn("No se pudo cargar la base operativa:", err);
+        
+        // Fallback visual por si cancelan el modal
+        drawMap.setView(defaultCoords, 13); 
+        
+        // MOSTRAR MODAL
+        showNoBaseModal();
     }
 
     const drawnItems = new L.FeatureGroup().addTo(drawMap);

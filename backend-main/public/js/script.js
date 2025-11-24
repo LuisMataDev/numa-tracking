@@ -15,30 +15,64 @@ let vehicles = [];
 let drivers = [];
 
 async function initMap() {
-    const defaultLat = 19.7677724;
+    // 1. Coordenadas por defecto (fallback visual solamente)
+    const defaultLat = 19.7677724; 
     const defaultLng = -104.3686507;
+    
+    // Inicializar mapa
     map = L.map('draw-map').setView([defaultLat, defaultLng], 13);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    const truckIcon = L.icon({
-        iconUrl: '/html/img/logo.png',
-        iconSize: [12, 12],
-        iconAnchor: [19, 38],
-        popupAnchor: [0, -40]
-    });
+    // 2. Intentar cargar la Base Operativa desde el Servidor
+    try {
+        const res = await fetch('/api/admin/config'); // Asumiendo que este es tu endpoint
+        
+        if (res.ok) {
+            const config = await res.json();
+            
+            // Verificamos si hay coordenadas válidas en la DB
+            if (config && config.lat && config.lng) {
+                const baseLat = parseFloat(config.lat);
+                const baseLng = parseFloat(config.lng);
 
-    if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                map.setView([position.coords.latitude, position.coords.longitude], 16);
-                L.marker([position.coords.latitude, position.coords.longitude], { icon: truckIcon }).addTo(map).bindPopup('<b>📍 Tu ubicación actual</b>').openPopup();
-                if (document.getElementById('status')) document.getElementById('status').textContent = 'Mostrando tu ubicación actual.';
-            },
-            (error) => console.warn(`Error de geolocalización (${error.code}): ${error.message}`)
-        );
+                // A: Centrar el mapa en la base
+                map.setView([baseLat, baseLng], 16);
+
+                // B: Poner un marcador distintivo para la Base
+                const baseIcon = L.icon({
+                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', // O tu propio icono de "Base"
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                    iconSize: [25, 41],
+                    iconAnchor: [12, 41],
+                    popupAnchor: [1, -34],
+                    shadowSize: [41, 41]
+                });
+
+                L.marker([baseLat, baseLng], { icon: baseIcon })
+                 .addTo(map)
+                 .bindPopup(`<b>Base Operativa</b><br>${config.address || 'Ubicación registrada'}`)
+                 .openPopup();
+
+                if (document.getElementById('status')) {
+                    document.getElementById('status').textContent = 'Base operativa cargada.';
+                }
+            } else {
+                // Si la respuesta es OK pero no tiene lat/lng
+                throw new Error('Configuración incompleta'); 
+            }
+        } else {
+            // Si el servidor responde 404 o error
+            throw new Error('No se encontró configuración');
+        }
+
+    } catch (error) {
+        console.warn("No se pudo cargar la base operativa:", error);
+        
+        // 3. MOSTRAR EL MODAL SI FALLA LA CARGA
+        showNoBaseModal();
     }
 
     socket = io();
@@ -122,6 +156,31 @@ async function initMap() {
     });
 
     await updateAll();
+}
+
+function showNoBaseModal() {
+    const modal = document.getElementById('modal-no-base');
+    const btnGo = document.getElementById('btn-go-config');
+    const btnClose = document.getElementById('btn-close-modal');
+
+    if (modal) {
+        modal.style.display = 'flex';
+
+        // Botón "Ir a Configuraciones"
+        btnGo.onclick = () => {
+            window.location.href = 'configuraciones.html';
+        };
+
+        // Botón "Cancelar" (Cierra el modal y deja al usuario ver el mapa por defecto)
+        btnClose.onclick = () => {
+            modal.style.display = 'none';
+        };
+    } else {
+        // Fallback simple si no has puesto el HTML del modal aún
+        if(confirm("No se ha establecido una Base Operativa.\n¿Deseas ir a configuraciones para establecerla?")) {
+            window.location.href = 'configuraciones.html';
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -18,16 +18,17 @@
 <body>
     <nav id="sidebar">
         <ul>
-            <li><a href="#principal" class="active"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
+            <li><a href="index.html" class="active"><i class="fa-solid fa-home"></i><span>Principal</span></a></li>
             <li><a href="routes.html"><i class="fa-solid fa-route"></i><span>Rutas</span></a></li>
             <li><a href="vehiculos.html"><i class="fa-solid fa-truck"></i><span>Vehículos</span></a></li>
             <li><a href="choferes.html"><i class="fa-solid fa-user"></i></i><span>Choferes</span></a></li>
             <li><a href="reportes.html"><i class="fa-solid fa-file-alt"></i><span>Reportes</span></a></li>
-            <li><a href="#configuraciones"><i class="fa fa-cog"></i><span>Configuraciones</span></a></li>
+            <li><a href="configuraciones.html"><i class="fa fa-cog"></i><span>Configuraciones</span></a></li>
             <li><a href="#info"><i class="fa fa-info-circle"></i><span>Información</span></a></li>
             <li><a href="#sing-out"><i class="fa fa-sign-out"></i><span>Cerrar sesión</span></a></li>
         </ul>
     </nav>
+
 
     <div id="main-content">
         <header>
@@ -95,6 +96,17 @@
                     <button class="service-option" data-service="llanta">
                         <i class="fa-solid fa-car-burst"></i><span>Llantero</span>
                     </button>
+                </div>
+            </div>
+            <div id="modal-no-base" class="modalB" style="display: none;">
+                <div class="modal-content">
+                    <h3>⚠️ Base Operativa no detectada</h3>
+                    <p>No se ha configurado la ubicación de la base en el sistema.</p>
+                    <p>¿Deseas establecerla ahora?</p>
+                    <div class="modal-buttons">
+                        <button id="btn-go-config" class="btn-primary">Ir a Configuraciones</button>
+                        <button id="btn-close-modal" class="btn-secondary">Cancelar</button>
+                    </div>
                 </div>
             </div>
 
